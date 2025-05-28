@@ -1,10 +1,12 @@
 package com.example.watwallet.data.repository
 
 import com.google.firebase.Firebase
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
+import kotlin.math.exp
 
 class TransactionRepositoryImpl : TransactionsRepository {
 
@@ -16,6 +18,36 @@ class TransactionRepositoryImpl : TransactionsRepository {
 
     override suspend fun addExpense(expenseDTO: CreateExpenseDTO): DocumentReference {
         return firestore.collection("expenses").add(expenseDTO).await()
+    }
+
+    override suspend fun getExpense(id: String): Expense? {
+        return try {
+            val expenseRes = firestore.collection("expenses").document(id).get().await()
+            Expense(
+                uid = expenseRes.id,
+                amount = expenseRes.get("amount") as Number,
+                date = expenseRes.getTimestamp("date") ?: Timestamp.now(),
+                description = expenseRes.getString("description") ?: "",
+                seasonId = expenseRes.getString("seasonId") ?: "",
+                tag = expenseRes.getString("tag") ?: "",
+                userId = expenseRes.getString("userId") ?: ""
+            )
+        }catch (e:Exception){
+            null
+        }
+    }
+
+    override suspend fun updateExpense(expense: Expense) {
+        firestore.collection("expenses").document(expense.uid).update(
+            hashMapOf(
+                "amount" to expense.amount,
+                "date" to expense.date,
+                "description" to expense.description,
+                "seasonId" to expense.seasonId,
+                "tag" to expense.tag,
+                "userId" to expense.userId
+            )
+        ).await()
     }
 
     override suspend fun getAllTransactions(userId: String): OverallTransactionsDTO {
@@ -74,6 +106,17 @@ class TransactionRepositoryImpl : TransactionsRepository {
             expenses = totalExpenses,
             transactions = allTransactions
         )
+    }
+
+    override suspend fun deleteTransaction(id: String, transactionType: TransactionType) {
+        when(transactionType){
+            TransactionType.Income ->{
+                firestore.collection("incomes").document(id).delete().await()
+            }
+            TransactionType.Expense->{
+                firestore.collection("expenses").document(id).delete().await()
+            }
+        }
     }
 
 }

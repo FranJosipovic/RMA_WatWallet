@@ -59,6 +59,8 @@ class ExpenseFormValidator{
 
 }
 
+public var tags: List<String> = expenseTags
+
 class AddExpenseViewModel(
     private val userRepository: UserRepository,
     private val transactionsRepository: TransactionsRepository,
@@ -69,8 +71,6 @@ class AddExpenseViewModel(
     private val _state = MutableStateFlow(AddExpenseUISate())
     val state: StateFlow<AddExpenseUISate> = _state.asStateFlow()
     private lateinit var user: User
-
-    var tags: List<String> = expenseTags
 
     init {
         viewModelScope.launch {

@@ -55,7 +55,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 
 @Composable
-fun AddIncomeView(snackbarHostState: SnackbarHostState, addIncomeViewModel: AddIncomeViewModel, onAddJob:()->Unit) {
+fun AddIncomeView(snackbarHostState: SnackbarHostState, addIncomeViewModel: AddIncomeViewModel, onIncomeAdded:()->Unit, onAddJob:()->Unit) {
     val focusManager = LocalFocusManager.current
 
     val jobs = addIncomeViewModel.jobs
@@ -243,6 +243,7 @@ fun AddIncomeView(snackbarHostState: SnackbarHostState, addIncomeViewModel: AddI
                                 actionLabel = "Dismiss"
                             )
                         }
+                        onIncomeAdded()
                     }))
                 },
                 modifier = Modifier.weight(2f),

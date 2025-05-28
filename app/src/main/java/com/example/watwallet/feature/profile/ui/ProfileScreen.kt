@@ -110,7 +110,7 @@ fun ProfileScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Profile card
-                ProfileCard({}, user = uiState.value.user!!)
+                ProfileCard(user = uiState.value.user!!)
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -165,20 +165,12 @@ fun ProfileScreen(navController: NavController) {
 
 
 @Composable
-fun ProfileCard(onEdit: () -> Unit, user:User){
+fun ProfileCard(user:User){
     Box(modifier = Modifier
         .border(width = 1.dp, color = Color.Black, shape = RoundedCornerShape(12.dp))
         .padding(12.dp)
         .fillMaxWidth()
     ){
-        Icon(
-            painter = painterResource(R.drawable.edit_icon),
-            tint = Color.Black,
-            contentDescription = "Edit icon",
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .clickable { onEdit() }
-        )
         Row(horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(modifier = Modifier
                 .width(60.dp)

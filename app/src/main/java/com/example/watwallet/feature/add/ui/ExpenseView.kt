@@ -49,6 +49,7 @@ import com.example.watwallet.feature.add.viewmodel.AddExpenseFormEvent
 import com.example.watwallet.feature.add.viewmodel.AddExpenseViewModel
 import com.example.watwallet.feature.add.viewmodel.AddIncomeFormEvent
 import com.example.watwallet.feature.add.viewmodel.AddIncomeViewModel
+import com.example.watwallet.feature.add.viewmodel.tags
 import com.example.watwallet.ui.components.CurrencyDropdown
 import com.example.watwallet.ui.components.CustomDatePicker
 import com.example.watwallet.ui.components.MoneyInputField
@@ -56,14 +57,12 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun AddExpenseView(snackbarHostState: SnackbarHostState, addExpenseViewModel: AddExpenseViewModel, modifier: Modifier) {
+fun AddExpenseView(snackbarHostState: SnackbarHostState, addExpenseViewModel: AddExpenseViewModel, modifier: Modifier, onExpenseAdded:()->Unit) {
     val focusManager = LocalFocusManager.current
 
     var selectedCurrency by remember { mutableStateOf("$ USD") }
     val currencies = listOf("$ USD", "€ EUR", "¥ JPY", "£ GBP", "₹ INR")
     var selectedCurrencyIndex by remember { mutableStateOf(0) }
-
-    val tags = addExpenseViewModel.tags
 
     val state by addExpenseViewModel.state.collectAsState()
 
@@ -200,6 +199,7 @@ fun AddExpenseView(snackbarHostState: SnackbarHostState, addExpenseViewModel: Ad
                                 actionLabel = "Dismiss"
                             )
                         }
+                        onExpenseAdded()
                     }))
                 },
                 modifier = Modifier.weight(2f),

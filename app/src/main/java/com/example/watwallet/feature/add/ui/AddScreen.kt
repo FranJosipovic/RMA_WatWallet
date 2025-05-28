@@ -12,9 +12,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.watwallet.app.sendTransactionNotification
 import com.example.watwallet.feature.add.viewmodel.AddExpenseViewModel
 import com.example.watwallet.feature.add.viewmodel.AddIncomeViewModel
 import com.example.watwallet.ui.components.CustomTabView
@@ -22,6 +24,8 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun AddScreen(startTabContent:Int = 0, snackbarHostState: SnackbarHostState ,onAddJob:()->Unit){
+
+    val context = LocalContext.current
 
     val addIncomeViewModel:AddIncomeViewModel = koinViewModel()
     val addExpenseViewModel: AddExpenseViewModel = koinViewModel()
@@ -35,12 +39,18 @@ fun AddScreen(startTabContent:Int = 0, snackbarHostState: SnackbarHostState ,onA
                 snackbarHostState = snackbarHostState,
                 addExpenseViewModel = addExpenseViewModel,
                 modifier = Modifier,
+                onExpenseAdded = {
+                    sendTransactionNotification(context,"Expense Added Successfully")
+                }
             )
         },
         {
             AddIncomeView(
                 snackbarHostState = snackbarHostState,
                 addIncomeViewModel = addIncomeViewModel,
+                onIncomeAdded = {
+                    sendTransactionNotification(context,"Expense Added Successfully")
+                },
                 onAddJob = onAddJob
             )
         }
