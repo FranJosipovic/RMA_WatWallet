@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "8867098167",
+    "project_id": "watwallet-fc5ab",
+    "storage_bucket": "watwallet-fc5ab.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:8867098167:android:f4c64395e1f8a33d1919b2",
+        "android_client_info": {
+          "package_name": "com.example.watwallet"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAYw4uTAjueMO5-OBZsrpjuynIKntM8FqY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
