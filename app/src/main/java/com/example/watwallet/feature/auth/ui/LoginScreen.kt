@@ -65,23 +65,6 @@ fun LoginScreen(navController: NavController){
             ) {
                 Text("Sign In", textAlign = TextAlign.Center, color = Color.White, fontSize = 24.sp)
             }
-            Button(
-                onClick = {
-
-                },
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White
-                ),
-                shape = RoundedCornerShape(4.dp)
-            ) {
-                Text(
-                    "Sign In with google",
-                    textAlign = TextAlign.Center,
-                    color = Color.Black,
-                    fontSize = 24.sp
-                )
-            }
             Spacer(Modifier.height(15.dp))
             Text(
                 text = "Don't have an account?",

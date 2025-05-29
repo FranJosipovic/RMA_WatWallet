@@ -136,7 +136,7 @@ class AddExpenseViewModel(
             transactionsRepository.addExpense(
                 CreateExpenseDTO(
                     userId = user.uid,
-                    seasonId = user.userInfo.seasonJobs.first { it.season.current }.season.id,
+                    seasonId = "GpA2hWiQ3RJKZVsJjk2q",
                     amount = _state.value.amount.toFloat(),
                     description = _state.value.description,
                     tag = _state.value.tag,

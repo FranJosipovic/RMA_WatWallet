@@ -46,7 +46,7 @@ data class ExpenseEditDTO(
     val userId: String
 )
 
-class HomeViewModel(private val transactionsRepository: TransactionsRepository, private val expenseFormValidator:ExpenseFormValidator = ExpenseFormValidator()) : ViewModel(){
+class HomeViewModel(private val transactionsRepository: TransactionsRepository) : ViewModel(){
 
     private val user = Firebase.auth.currentUser!!
 
@@ -74,15 +74,9 @@ class HomeViewModel(private val transactionsRepository: TransactionsRepository, 
         when(event){
             is EditExpenseFormEvent.AmountChanged -> {
                 _selectedExpense.update { it!!.copy(amount = event.amount) }
-//                if(expenseFormValidator.validateAmount(event.amount).isSuccess && _state.value.amountError != null){
-//                    _state.update { _state.value.copy(amountError = null) }
-//                }
             }
             is EditExpenseFormEvent.DescriptionChanged -> {
                 _selectedExpense.update { it!!.copy(description = event.description) }
-//                if(expenseFormValidator.validateDescription(event.description).isSuccess && _state.value.descriptionError != null){
-//                    _state.update { _state.value.copy(descriptionError = null) }
-//                }
             }
             is EditExpenseFormEvent.OnCancel -> unselectExpense()
             is EditExpenseFormEvent.OnSubmit -> {

@@ -38,7 +38,6 @@ fun AddScreen(startTabContent:Int = 0, snackbarHostState: SnackbarHostState ,onA
             AddExpenseView(
                 snackbarHostState = snackbarHostState,
                 addExpenseViewModel = addExpenseViewModel,
-                modifier = Modifier,
                 onExpenseAdded = {
                     sendTransactionNotification(context,"Expense Added Successfully")
                 }

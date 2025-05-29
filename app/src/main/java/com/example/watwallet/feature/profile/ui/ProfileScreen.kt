@@ -1,10 +1,6 @@
 package com.example.watwallet.feature.profile.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -31,17 +26,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.watwallet.R
 import com.example.watwallet.core.navigation.NavigationItem
-import com.example.watwallet.data.repository.JobUser
-import com.example.watwallet.data.repository.User
+import com.example.watwallet.feature.profile.ui.components.JobCard
+import com.example.watwallet.feature.profile.ui.components.ProfileCard
 import com.example.watwallet.feature.profile.viewmodel.ProfileViewModel
-import com.example.watwallet.ui.components.ConfirmDialog
-import com.example.watwallet.utils.DateUtils
+import com.example.watwallet.ui.components.CustomConfirmDialog
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -65,7 +58,7 @@ fun ProfileScreen(navController: NavController) {
         }
     }
 
-    ConfirmDialog(
+    CustomConfirmDialog(
         showDialog = showConfirmDialog.value,
         description = "Are you sure you want to delete this job?",
         onConfirm = {
@@ -85,15 +78,21 @@ fun ProfileScreen(navController: NavController) {
                 trackColor = MaterialTheme.colorScheme.surfaceVariant,
             )
         }
+
         uiState.value.user == null && uiState.value.error != null && !uiState.value.loading -> {
             Text(uiState.value.error ?: "")
         }
+
         uiState.value.user != null && !uiState.value.loading -> {
-            Column(modifier = Modifier
-                .padding(12.dp)
-                .verticalScroll(rememberScrollState())
+            Column(
+                modifier = Modifier
+                    .padding(12.dp)
+                    .verticalScroll(rememberScrollState())
             ) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Text("Profile", fontSize = 35.sp)
                     Button(onClick = {
                         profileViewModel.logout {
@@ -120,7 +119,7 @@ fun ProfileScreen(navController: NavController) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("My Jobs", fontSize = 25.sp)
+                    Text(text = "My Jobs", fontSize = 25.sp)
                     Button(
                         onClick = {
                             navController.navigate(NavigationItem.AddJob.route)
@@ -145,90 +144,18 @@ fun ProfileScreen(navController: NavController) {
                     }
                 }
 
-                uiState.value.user!!.userInfo.seasonJobs.forEachIndexed { index, job ->
+                uiState.value.jobs.forEach { job ->
                     Spacer(modifier = Modifier.height(12.dp))
                     JobCard(
-                        job = job.job,
+                        job = job,
                         onEdit = {
-                            navController.navigate(NavigationItem.UpdateJob.createUpdateRoute(job.job.job.uid))
+                            navController.navigate(NavigationItem.UpdateJob.createUpdateRoute(job.id))
                         },
                         onDelete = {
                             jobToDelete.value = it
                             showConfirmDialog.value = true
                         }
                     )
-                }
-            }
-        }
-    }
-}
-
-
-@Composable
-fun ProfileCard(user:User){
-    Box(modifier = Modifier
-        .border(width = 1.dp, color = Color.Black, shape = RoundedCornerShape(12.dp))
-        .padding(12.dp)
-        .fillMaxWidth()
-    ){
-        Row(horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier
-                .width(60.dp)
-                .height(60.dp)
-                .background(color = Color.Blue, shape = CircleShape)
-            ){
-                Text("${user.userInfo.name.first()}${user.userInfo.surname.first()}", modifier = Modifier.align(Alignment.Center), color = Color.White)
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(.1.dp)) {
-                Text("${user.userInfo.name} ${user.userInfo.surname}")
-                Text(user.email)
-                Text(user.userInfo.phone)
-            }
-        }
-    }
-}
-
-@Composable
-fun JobCard(job: JobUser, onEdit:(id:String)->Unit, onDelete:(id:String)->Unit){
-    Box(modifier = Modifier
-        .border(width = 1.dp, color = Color.Black, shape = RoundedCornerShape(6.dp))
-        .fillMaxWidth()
-        .padding(12.dp)
-    ){
-        Row(modifier = Modifier.align(Alignment.TopEnd), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Icon(
-                painter = painterResource(R.drawable.edit_icon),
-                tint = Color.Black,
-                contentDescription = "Edit icon",
-                modifier = Modifier.clickable { onEdit(job.job.uid) }
-            )
-            Icon(
-                painter = painterResource(R.drawable.delete_icon),
-                tint = Color.Black,
-                contentDescription = "Edit icon",
-                modifier = Modifier.clickable {
-                    onDelete(job.job.uid)
-                }
-            )
-        }
-        Column {
-            Text(job.job.employer.name, fontSize = 24.sp)
-            Text(job.job.position, color = Color.Gray, fontSize = 16.sp)
-            Spacer(modifier = Modifier.height(10.dp))
-            Text("Location", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            Text(job.job.locationInfo, color = Color.Gray, fontSize = 16.sp)
-            Spacer(modifier = Modifier.height(10.dp))
-            Text("Job Description", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            Text(job.job.description, color = Color.Gray, fontSize = 16.sp)
-            Spacer(modifier = Modifier.height(10.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(15.dp)) {
-                Column {
-                    Text("Start Date", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    Text(DateUtils.timestampToLocalDate(job.startDate).toString(),color = Color.Gray, fontSize = 16.sp)
-                }
-                Column {
-                    Text("End Date", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    Text(DateUtils.timestampToLocalDate(job.endDate).toString(),color = Color.Gray, fontSize = 16.sp)
                 }
             }
         }

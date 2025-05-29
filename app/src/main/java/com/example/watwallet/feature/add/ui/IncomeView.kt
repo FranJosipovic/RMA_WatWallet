@@ -47,11 +47,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.watwallet.feature.add.viewmodel.AddIncomeFormEvent
 import com.example.watwallet.feature.add.viewmodel.AddIncomeViewModel
-import com.example.watwallet.ui.components.CurrencyDropdown
-import com.example.watwallet.ui.components.CustomDatePicker
+import com.example.watwallet.ui.components.CustomDatePickerDialog
 import com.example.watwallet.ui.components.MoneyInputField
 import kotlinx.coroutines.launch
-import org.koin.compose.viewmodel.koinViewModel
 
 
 @Composable
@@ -62,24 +60,23 @@ fun AddIncomeView(snackbarHostState: SnackbarHostState, addIncomeViewModel: AddI
 
     val state by addIncomeViewModel.state.collectAsState()
 
-    val currencies = listOf("$ USD", "€ EUR", "¥ JPY", "£ GBP", "₹ INR")
-    var selectedCurrencyIndex by remember { mutableStateOf(0) }
-
     var isJobMenuExpanded by remember { mutableStateOf(false) }
 
     var openDatePicker by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
 
-    when{
-        openDatePicker -> {
-            CustomDatePicker(
-                selectedStartDate = state.date,
-                onDismissRequest = {openDatePicker = false},
-                onSelectDate = { addIncomeViewModel.onEvent(AddIncomeFormEvent.SelectedDateChanged(it)) }
+    CustomDatePickerDialog(
+        show = openDatePicker,
+        selectedStartDate = state.date,
+        onDismissRequest = {openDatePicker = false },
+        onSelectDate = {
+            addIncomeViewModel.onEvent(
+                AddIncomeFormEvent.SelectedDateChanged(it)
             )
+            openDatePicker = false
         }
-    }
+    )
 
     Column(
         modifier = Modifier
@@ -159,13 +156,6 @@ fun AddIncomeView(snackbarHostState: SnackbarHostState, addIncomeViewModel: AddI
                 }
             )
         }
-
-        CurrencyDropdown(
-            modifier = Modifier,
-            currencies = currencies,
-            selectedIndex = selectedCurrencyIndex,
-            onCurrencySelected = { selectedCurrencyIndex = it }
-        )
 
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(

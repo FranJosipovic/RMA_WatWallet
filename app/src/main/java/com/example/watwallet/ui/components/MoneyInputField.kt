@@ -8,17 +8,21 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 
 
 @Composable
-fun MoneyInputField(label:String, modifier: Modifier, value: String, isError:Boolean, onValueChange:(String)->Unit){
+fun MoneyInputField(
+    label: String,
+    modifier: Modifier,
+    value: String,
+    isError: Boolean,
+    onValueChange: (String) -> Unit
+) {
 
     val focusManager = LocalFocusManager.current
 
@@ -27,7 +31,6 @@ fun MoneyInputField(label:String, modifier: Modifier, value: String, isError:Boo
         OutlinedTextField(
             value = value,
             onValueChange = {
-                // Optional: Allow only valid numeric characters like digits and dot
                 if (it.matches(Regex("^\\d*\\.?\\d{0,2}\$"))) {
                     onValueChange(it)
                 }
@@ -38,7 +41,7 @@ fun MoneyInputField(label:String, modifier: Modifier, value: String, isError:Boo
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             keyboardActions = KeyboardActions(
                 onDone = {
-                    focusManager.clearFocus() // 👈 this dismisses keyboard & clears focus
+                    focusManager.clearFocus()
                 }
             ),
             colors = TextFieldDefaults.colors(

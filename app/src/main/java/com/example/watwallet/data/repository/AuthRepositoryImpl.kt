@@ -15,22 +15,18 @@ import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
 
-class AuthRepositoryImpl:AuthRepository {
-
-
+class AuthRepositoryImpl : AuthRepository {
     private var auth: FirebaseAuth = Firebase.auth
     private var db: FirebaseFirestore = Firebase.firestore
 
-    override suspend fun isAuthenticated():Boolean{
+    override suspend fun isAuthenticated(): Boolean {
         return auth.currentUser != null
     }
 
     override suspend fun login(email: String, password: String): LoginResponse {
         return try {
-            // Attempt to sign in with Firebase
             val result = auth.signInWithEmailAndPassword(email, password).await()
 
-            // Check if the user is properly authenticated
             val user = result.user
             if (user != null) {
                 LoginResponse(isSuccess = true, errorMessage = null)
@@ -55,7 +51,8 @@ class AuthRepositoryImpl:AuthRepository {
     override suspend fun register(user: RegisterUser): RegisterResponse {
         return try {
             val authResult = auth.createUserWithEmailAndPassword(user.email, user.password).await()
-            val firebaseUser = authResult.user ?: return RegisterResponse(false, "User creation failed.")
+            val firebaseUser =
+                authResult.user ?: return RegisterResponse(false, "User creation failed.")
 
             // Get UID
             val uid = firebaseUser.uid

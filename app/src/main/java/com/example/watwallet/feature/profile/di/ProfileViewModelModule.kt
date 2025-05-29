@@ -6,6 +6,6 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 var profileViewModelModule = module {
-    viewModel { ProfileViewModel(get(),get()) }
+    viewModel { ProfileViewModel(get(),get(),get()) }
     viewModelOf(::ProfileViewModel)
 }

@@ -19,7 +19,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,7 +30,7 @@ import com.example.watwallet.ui.components.LabeledInputField
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun RegisterScreen(navController: NavController){
+fun RegisterScreen(navController: NavController) {
 
     val viewModel: AuthViewModel = koinViewModel()
 
@@ -41,22 +40,24 @@ fun RegisterScreen(navController: NavController){
     var surname by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
 
-    Box(modifier = Modifier.fillMaxSize()){
-        Column(modifier = Modifier.fillMaxSize().padding(vertical = 20.dp, horizontal = 20.dp)) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .padding(vertical = 20.dp, horizontal = 20.dp)) {
             Text("Sign Up", fontSize = 34.sp)
             Spacer(modifier = Modifier.height(10.dp))
             LabeledInputField(
                 label = "Email",
                 placeholder = "example@gmail.com",
                 value = email,
-                onValueChange = {email = it}
+                onValueChange = { email = it }
             )
             Spacer(Modifier.height(10.dp))
             LabeledInputField(
                 label = "Password",
                 placeholder = "password...",
                 value = password,
-                onValueChange = {password = it},
+                onValueChange = { password = it },
                 isPassword = true
             )
             Spacer(Modifier.height(10.dp))
@@ -64,21 +65,21 @@ fun RegisterScreen(navController: NavController){
                 label = "Name",
                 placeholder = "name",
                 value = name,
-                onValueChange = {name = it},
+                onValueChange = { name = it },
             )
             Spacer(Modifier.height(10.dp))
             LabeledInputField(
                 label = "Surname",
                 placeholder = "surname...",
                 value = surname,
-                onValueChange = {surname = it},
+                onValueChange = { surname = it },
             )
             Spacer(Modifier.height(10.dp))
             LabeledInputField(
                 label = "Phone",
                 placeholder = "+385...",
                 value = phone,
-                onValueChange = {phone = it},
+                onValueChange = { phone = it },
             )
             Spacer(Modifier.height(20.dp))
             Button(
@@ -99,20 +100,31 @@ fun RegisterScreen(navController: NavController){
                         }
                     }
                 },
-                modifier = Modifier.fillMaxWidth().height(50.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Blue
                 ),
                 shape = RoundedCornerShape(4.dp)
             ) {
-                Text("Sign Up", textAlign = TextAlign.Center, color = Color.White, fontSize = 24.sp)
+                Text(
+                    text = "Sign Up",
+                    textAlign = TextAlign.Center,
+                    color = Color.White,
+                    fontSize = 24.sp
+                )
             }
             Spacer(Modifier.height(15.dp))
-            Text("Already" +
-                    " have an account?", color = Color.Blue, textAlign = TextAlign.Center, modifier = Modifier.clickable {
-                navController.navigate(NavigationItem.Login.route)
-            })
+            Text(
+                text = "Already" +
+                        " have an account?",
+                color = Color.Blue,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.clickable {
+                    navController.navigate(NavigationItem.Login.route)
+                }
+            )
         }
     }
-
 }

@@ -29,7 +29,7 @@ fun BottomNavigation(navController: NavController) {
                 ),
                 selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
                 onClick = {
-                    navController.navigate(screen.createDefaultRoute()){
+                    navController.navigate(screen.createDefaultRoute()) {
                         launchSingleTop = true
                         popUpTo(screen.route)
                     }
@@ -41,7 +41,11 @@ fun BottomNavigation(navController: NavController) {
                         tint = if (currentDestination?.hierarchy?.any { it.route == screen.route } == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
                     )
                 },
-                label = { Text(screen.label, color = if (currentDestination?.hierarchy?.any { it.route == screen.route } == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary)}
+                label = {
+                    Text(
+                        screen.label,
+                        color = if (currentDestination?.hierarchy?.any { it.route == screen.route } == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary)
+                }
             )
         }
     }

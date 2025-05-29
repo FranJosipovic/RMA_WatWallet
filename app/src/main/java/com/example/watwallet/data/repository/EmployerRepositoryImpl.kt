@@ -4,7 +4,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
 
-class EmployerRepositoryImpl : EmployerRepository{
+class EmployerRepositoryImpl : EmployerRepository {
 
     private val db = Firebase.firestore
 
@@ -37,10 +37,22 @@ class EmployerRepositoryImpl : EmployerRepository{
                 uid = doc.id,
                 name = doc.getString("name") ?: ""
             )
-        }catch (e:Exception){
+        } catch (e: Exception) {
             null
         }
 
+    }
+
+    override suspend fun get(count: Long?): List<Employer> {
+        val query = db.collection("employers")
+
+        val snapshot = if (count != null) {
+            query.limit(count).get().await()
+        } else {
+            query.get().await()
+        }
+
+        return snapshot.documents.mapNotNull { Employer(it.id, it.getString("name") ?: "") }
     }
 
 }

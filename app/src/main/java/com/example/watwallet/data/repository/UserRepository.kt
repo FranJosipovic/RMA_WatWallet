@@ -15,6 +15,4 @@ interface UserRepository {
     suspend fun loadUserData(): User?
     suspend fun updateUserInfo(): User?
     fun clearUserCache()
-    suspend fun softDeleteJob(uid:String)
-    suspend fun updateSeasonJobs(seasonJobs:List<SeasonJob>)
 }

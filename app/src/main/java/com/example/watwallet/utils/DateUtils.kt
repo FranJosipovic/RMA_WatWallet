@@ -34,6 +34,9 @@ object DateUtils {
 
     val currentDateTime get() = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 
+    val currentYear = Clock.System.now()
+        .toLocalDateTime(TimeZone.currentSystemDefault())
+        .year
 
     val currentDate get() = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
 }

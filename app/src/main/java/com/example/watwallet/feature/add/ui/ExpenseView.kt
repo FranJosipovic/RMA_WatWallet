@@ -11,13 +11,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -42,27 +40,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.watwallet.feature.add.viewmodel.AddExpenseFormEvent
 import com.example.watwallet.feature.add.viewmodel.AddExpenseViewModel
-import com.example.watwallet.feature.add.viewmodel.AddIncomeFormEvent
-import com.example.watwallet.feature.add.viewmodel.AddIncomeViewModel
 import com.example.watwallet.feature.add.viewmodel.tags
-import com.example.watwallet.ui.components.CurrencyDropdown
-import com.example.watwallet.ui.components.CustomDatePicker
+import com.example.watwallet.ui.components.CustomDatePickerDialog
 import com.example.watwallet.ui.components.MoneyInputField
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun AddExpenseView(snackbarHostState: SnackbarHostState, addExpenseViewModel: AddExpenseViewModel, modifier: Modifier, onExpenseAdded:()->Unit) {
+fun AddExpenseView(
+    snackbarHostState: SnackbarHostState,
+    addExpenseViewModel: AddExpenseViewModel,
+    onExpenseAdded: () -> Unit
+) {
     val focusManager = LocalFocusManager.current
-
-    var selectedCurrency by remember { mutableStateOf("$ USD") }
-    val currencies = listOf("$ USD", "€ EUR", "¥ JPY", "£ GBP", "₹ INR")
-    var selectedCurrencyIndex by remember { mutableStateOf(0) }
 
     val state by addExpenseViewModel.state.collectAsState()
 
@@ -70,15 +63,17 @@ fun AddExpenseView(snackbarHostState: SnackbarHostState, addExpenseViewModel: Ad
 
     val scope = rememberCoroutineScope()
 
-    when{
-        openDatePicker -> {
-            CustomDatePicker(
-                selectedStartDate = state.date,
-                onDismissRequest = {openDatePicker = false},
-                onSelectDate = { addExpenseViewModel.onEvent(AddExpenseFormEvent.SelectedDateChanged(it)) }
+    CustomDatePickerDialog(
+        show = openDatePicker,
+        selectedStartDate = state.date,
+        onDismissRequest = {openDatePicker = false },
+        onSelectDate = {
+            addExpenseViewModel.onEvent(
+                AddExpenseFormEvent.SelectedDateChanged(it)
             )
+            openDatePicker = false
         }
-    }
+    )
 
     Column(
         modifier = Modifier
@@ -105,14 +100,7 @@ fun AddExpenseView(snackbarHostState: SnackbarHostState, addExpenseViewModel: Ad
                 modifier = Modifier.weight(1f),
                 value = state.amount,
                 isError = state.amountError != null,
-                onValueChange = {addExpenseViewModel.onEvent(AddExpenseFormEvent.AmountChanged(it))}
-            )
-
-            CurrencyDropdown(
-                Modifier.width(120.dp),
-                currencies = currencies,
-                selectedIndex = selectedCurrencyIndex,
-                onCurrencySelected = { selectedCurrencyIndex = it }
+                onValueChange = { addExpenseViewModel.onEvent(AddExpenseFormEvent.AmountChanged(it)) }
             )
         }
 
@@ -159,12 +147,24 @@ fun AddExpenseView(snackbarHostState: SnackbarHostState, addExpenseViewModel: Ad
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.selectable(
                             selected = (state.tag == tag),
-                            onClick = { addExpenseViewModel.onEvent(AddExpenseFormEvent.TagChanged(tag)) }
+                            onClick = {
+                                addExpenseViewModel.onEvent(
+                                    AddExpenseFormEvent.TagChanged(
+                                        tag
+                                    )
+                                )
+                            }
                         )
                     ) {
                         RadioButton(
                             selected = (state.tag == tag),
-                            onClick = { addExpenseViewModel.onEvent(AddExpenseFormEvent.TagChanged(tag)) },
+                            onClick = {
+                                addExpenseViewModel.onEvent(
+                                    AddExpenseFormEvent.TagChanged(
+                                        tag
+                                    )
+                                )
+                            },
                             colors = RadioButtonDefaults.colors(selectedColor = Color.Blue)
                         )
                         Text(tag)
@@ -176,7 +176,7 @@ fun AddExpenseView(snackbarHostState: SnackbarHostState, addExpenseViewModel: Ad
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
             value = state.description,
-            onValueChange = {addExpenseViewModel.onEvent(AddExpenseFormEvent.DescriptionChanged(it))},
+            onValueChange = { addExpenseViewModel.onEvent(AddExpenseFormEvent.DescriptionChanged(it)) },
             label = { Text("Expense description") },
             placeholder = { Text("e.g. Taxi") },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -217,4 +217,9 @@ fun AddExpenseView(snackbarHostState: SnackbarHostState, addExpenseViewModel: Ad
             }
         }
     }
+}
+
+@Composable
+fun ExpenseForm() {
+
 }

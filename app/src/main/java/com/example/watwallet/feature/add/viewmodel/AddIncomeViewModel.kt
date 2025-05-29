@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.watwallet.data.repository.AuthRepository
 import com.example.watwallet.data.repository.CreateIncomeDTO
 import com.example.watwallet.data.repository.Job
+import com.example.watwallet.data.repository.JobRepository
 import com.example.watwallet.data.repository.TransactionsRepository
 import com.example.watwallet.data.repository.User
 import com.example.watwallet.data.repository.UserRepository
@@ -88,6 +89,7 @@ class AddIncomeViewModel(
     private val userRepository: UserRepository,
     private val transactionRepository: TransactionsRepository,
     private val authRepository: AuthRepository,
+    private val jobsRepository: JobRepository,
     private val incomeFormValidator: IncomeFormValidator = IncomeFormValidator(),
 ) : ViewModel(){
 
@@ -106,9 +108,7 @@ class AddIncomeViewModel(
                 userRepository.clearUserCache()
             }
             user = userResult!!
-            jobs = user.userInfo.seasonJobs.map {
-                it.job.job
-            }
+            jobs = jobsRepository.getJobs(userId = user.uid)
             _state.update { _state.value.copy(job = jobs.first()) }
         }
     }
@@ -187,9 +187,9 @@ class AddIncomeViewModel(
             if(hasError) return@launch
 
             transactionRepository.addIncome(CreateIncomeDTO(
-                jobId = _state.value.job!!.uid,
+                jobId = _state.value.job!!.id,
                 userId = user.uid,
-                seasonId = user.userInfo.seasonJobs.first { it.season.current }.season.id,
+                seasonId = "GpA2hWiQ3RJKZVsJjk2q",
                 baseEarned = _state.value.baseEarned.toFloat(),
                 tipsEarned = _state.value.tipsEarned.toFloat(),
                 hoursWorked = _state.value.totalHoursWorked.toInt(),

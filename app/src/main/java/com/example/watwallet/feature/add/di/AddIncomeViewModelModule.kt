@@ -5,5 +5,5 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 var addIncomeViewModelModule = module {
-    viewModel { AddIncomeViewModel(get(),get(),get()) }
+    viewModel { AddIncomeViewModel(get(),get(),get(), get()) }
 }

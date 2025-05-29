@@ -29,8 +29,8 @@ import com.example.watwallet.core.navigation.NavigationItem
 import com.example.watwallet.feature.add.ui.AddScreen
 import com.example.watwallet.feature.auth.ui.RegisterScreen
 import com.example.watwallet.feature.home.ui.HomeScreen
-import com.example.watwallet.feature.profile.addjob.ui.AddJobRoute
-import com.example.watwallet.feature.profile.addjob.ui.UpdateJobRoute
+import com.example.watwallet.feature.profile.job.ui.AddJobRoute
+import com.example.watwallet.feature.profile.job.ui.UpdateJobRoute
 import com.example.watwallet.feature.profile.ui.ProfileScreen
 import com.example.watwallet.ui.components.BottomNavigation
 
