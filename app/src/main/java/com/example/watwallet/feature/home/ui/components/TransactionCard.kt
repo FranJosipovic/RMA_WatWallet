@@ -16,14 +16,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.watwallet.data.repository.GetTransactionDTO
+import com.example.watwallet.data.repository.TransactionGetModel
 import com.example.watwallet.data.repository.TransactionType
-import com.example.watwallet.utils.DateUtils
 
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun TransactionCard(transaction: GetTransactionDTO, onClick: () -> Unit) {
+fun TransactionCard(transaction: TransactionGetModel, onClick: () -> Unit) {
     val isExpense = transaction.transactionType == TransactionType.Expense
     Box(
         modifier = Modifier
@@ -48,7 +47,7 @@ fun TransactionCard(transaction: GetTransactionDTO, onClick: () -> Unit) {
         Column {
             Text(transaction.description)
             Text(
-                DateUtils.timestampToLocalDate(transaction.date)
+                transaction.date
                     .toString(),
                 color = Color.Gray
             )

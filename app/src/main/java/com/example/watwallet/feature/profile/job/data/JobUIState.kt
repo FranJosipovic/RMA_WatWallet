@@ -1,7 +1,7 @@
 package com.example.watwallet.feature.profile.job.data
 
 import android.location.Address
-import com.example.watwallet.data.repository.Employer
+import com.example.watwallet.data.repository.EmployerGetModel
 import com.example.watwallet.utils.DateUtils
 import kotlinx.datetime.LocalDate
 
@@ -12,6 +12,6 @@ data class JobUIState(
     val description: String = "",
     val startDate: LocalDate = DateUtils.currentDate,
     val endDate: LocalDate = DateUtils.currentDate,
-    val employer: Employer? = null,
+    val employer: EmployerGetModel? = null,
     val loading: Boolean = false
 )

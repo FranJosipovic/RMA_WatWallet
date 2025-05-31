@@ -9,7 +9,5 @@ import org.koin.androidx.compose.koinViewModel
 fun UpdateJobRoute(jobId: String, onJobUpdated: () -> Unit) {
     val jobViewModel: JobViewModel = koinViewModel()
 
-    JobForm(jobId = jobId, jobViewModel = jobViewModel) {
-        onJobUpdated()
-    }
+    JobForm(jobId = jobId, jobViewModel = jobViewModel, onJobAction = { onJobUpdated() })
 }

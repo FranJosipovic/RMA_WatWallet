@@ -1,30 +1,19 @@
 package com.example.watwallet.data.repository
 
+import com.example.watwallet.utils.DateUtils
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import com.google.type.DateTime
 import kotlinx.coroutines.tasks.await
-
-//collection: employers
-data class Employer(
-    val uid: String,
-    val name: String
-)
 
 data class User(
     var uid: String,
     var email: String,
     var accessToken: String,
     var userInfo: UserInfo,
-)
-
-//collection: seasons
-data class Season(
-    val id: String,
-    val current: Boolean,
-    val season: Number
 )
 
 data class UserInfo(
@@ -82,6 +71,8 @@ class UserRepositoryImpl : UserRepository {
             null
         }
     }
+
+
 
     override suspend fun updateUserInfo(): User? {
         return loadUserData()

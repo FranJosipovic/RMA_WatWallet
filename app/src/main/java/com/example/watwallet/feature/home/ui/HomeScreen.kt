@@ -39,17 +39,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.watwallet.core.navigation.NavigationItem
-import com.example.watwallet.data.repository.GetTransactionDTO
+import com.example.watwallet.data.repository.TransactionGetModel
+import com.example.watwallet.data.repository.TransactionType
 import com.example.watwallet.feature.home.ui.components.EditExpenseDialog
+import com.example.watwallet.feature.home.ui.components.EditIncomeDialog
 import com.example.watwallet.feature.home.ui.components.TransactionBottomSheet
 import com.example.watwallet.feature.home.ui.components.TransactionCard
 import com.example.watwallet.feature.home.viewmodel.EditExpenseFormEvent
+import com.example.watwallet.feature.home.viewmodel.EditIncomeFormEvent
 import com.example.watwallet.feature.home.viewmodel.HomeViewModel
 import com.example.watwallet.ui.components.CustomConfirmDialog
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
 
@@ -64,13 +67,14 @@ fun HomeScreen(navController: NavController) {
 
     val coroutineScope = rememberCoroutineScope()
 
-    var selectedTransaction by rememberSaveable { mutableStateOf<GetTransactionDTO?>(null) }
+    var selectedTransaction by rememberSaveable { mutableStateOf<TransactionGetModel?>(null) }
 
     val deleting by homeViewModel.deleting.collectAsState()
     val finding by homeViewModel.finding.collectAsState()
     val editing by homeViewModel.finding.collectAsState()
 
     val selectedExpense by homeViewModel.selectedExpense.collectAsState()
+    val selectedIncome by homeViewModel.selectedIncome.collectAsState()
 
     if (selectedExpense != null) {
         EditExpenseDialog(
@@ -116,6 +120,60 @@ fun HomeScreen(navController: NavController) {
                     })
                 )
             }
+        )
+    }
+
+    val jobs by homeViewModel.jobs.collectAsState()
+
+    if (selectedIncome != null) {
+        EditIncomeDialog(
+            jobs = jobs,
+            selectedJob = selectedIncome!!.job,
+            onJobSelect = { homeViewModel.onEditIncomeEvent(EditIncomeFormEvent.JobChanged(it)) },
+            selectedDate = selectedIncome!!.date,
+            onDateSelect = {
+                homeViewModel.onEditIncomeEvent(
+                    EditIncomeFormEvent.SelectedDateChanged(
+                        it
+                    )
+                )
+            },
+            baseEarned = selectedIncome!!.baseEarned,
+            onBaseEarnedChange = {
+                homeViewModel.onEditIncomeEvent(
+                    EditIncomeFormEvent.BaseEarnedChanged(
+                        it
+                    )
+                )
+            },
+            tipsEarned = selectedIncome!!.tipsEarned,
+            onTipsEarnedChange = {
+                homeViewModel.onEditIncomeEvent(
+                    EditIncomeFormEvent.TipsEarnedChanged(
+                        it
+                    )
+                )
+            },
+            totalHoursWorked = selectedIncome!!.totalHoursWorked,
+            onTotalHoursWorkedChange = {
+                homeViewModel.onEditIncomeEvent(
+                    EditIncomeFormEvent.TotalHoursWorkedChanged(
+                        it
+                    )
+                )
+            },
+            onSaveChanges = {
+                homeViewModel.onEditIncomeEvent(EditIncomeFormEvent.OnSubmit(onSuccess = {
+                    homeViewModel.unselectIncome()
+                    selectedTransaction = null
+                    coroutineScope.launch {
+                        isRefreshing = true
+                        homeViewModel.refreshTransactions()
+                        isRefreshing = false
+                    }
+                }))
+            },
+            onDismissRequest = { homeViewModel.unselectIncome() }
         )
     }
 
@@ -268,7 +326,11 @@ fun HomeScreen(navController: NavController) {
                     deleting = deleting,
                     onDismissRequest = { selectedTransaction = null },
                     onEdit = {
-                        homeViewModel.getExpense(selectedTransaction!!.uid)
+                        if (selectedTransaction!!.transactionType == TransactionType.Income) {
+                            homeViewModel.getIncome(selectedTransaction!!.uid)
+                        } else {
+                            homeViewModel.getExpense(selectedTransaction!!.uid)
+                        }
                     },
                     onDelete = {
                         showConfirmDialog.value = true

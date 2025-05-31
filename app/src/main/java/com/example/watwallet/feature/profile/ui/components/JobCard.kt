@@ -22,13 +22,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.watwallet.R
-import com.example.watwallet.data.repository.Job
-import com.example.watwallet.feature.profile.data.JobUI
-import com.example.watwallet.utils.DateUtils
+import com.example.watwallet.feature.profile.data.JobUIState
 
 
 @Composable
-fun JobCard(job: JobUI, onEdit: (id: String) -> Unit, onDelete: (id: String) -> Unit) {
+fun JobCard(job: JobUIState, onEdit: (id: String) -> Unit, onDelete: (id: String) -> Unit) {
     Box(
         modifier = Modifier
             .border(width = 1.dp, color = Color.Black, shape = RoundedCornerShape(6.dp))

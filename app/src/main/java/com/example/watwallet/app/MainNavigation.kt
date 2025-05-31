@@ -24,9 +24,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
-import com.example.watwallet.feature.auth.ui.LoginScreen
 import com.example.watwallet.core.navigation.NavigationItem
-import com.example.watwallet.feature.add.ui.AddScreen
+import com.example.watwallet.feature.addtransaction.ui.AddTransactionScreen
+import com.example.watwallet.feature.auth.ui.LoginScreen
 import com.example.watwallet.feature.auth.ui.RegisterScreen
 import com.example.watwallet.feature.home.ui.HomeScreen
 import com.example.watwallet.feature.profile.job.ui.AddJobRoute
@@ -49,7 +49,8 @@ fun MainNavigation(
             when (navBackStackEntry?.destination?.route) {
                 NavigationItem.Home.route,
                 NavigationItem.Add.route,
-                NavigationItem.Profile.route-> true
+                NavigationItem.Profile.route -> true
+
                 else -> false
             }
         }
@@ -57,7 +58,7 @@ fun MainNavigation(
 
     val showTopBar by remember {
         derivedStateOf {
-            when(navBackStackEntry?.destination?.route){
+            when (navBackStackEntry?.destination?.route) {
                 NavigationItem.AddJob.route -> true
                 NavigationItem.UpdateJob.route -> true
                 else -> false
@@ -67,7 +68,7 @@ fun MainNavigation(
 
     val topAppBarTitle by remember {
         derivedStateOf {
-            when(navBackStackEntry?.destination?.route){
+            when (navBackStackEntry?.destination?.route) {
                 NavigationItem.AddJob.route -> "Create New Job"
                 NavigationItem.UpdateJob.route -> "Update Job"
                 else -> ""
@@ -79,17 +80,22 @@ fun MainNavigation(
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
         },
-        bottomBar = {if (showBottomBar) BottomNavigation(navController)},
-        topBar = { if(showTopBar){
-            TopAppBar(
-                title = { Text(topAppBarTitle) },
-                navigationIcon = {
-                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "back icon",Modifier.clickable {
-                        navController.navigateUp()
-                    })
-                },
-            )
-        }}
+        bottomBar = { if (showBottomBar) BottomNavigation(navController) },
+        topBar = {
+            if (showTopBar) {
+                TopAppBar(
+                    title = { Text(topAppBarTitle) },
+                    navigationIcon = {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "back icon",
+                            Modifier.clickable {
+                                navController.navigateUp()
+                            })
+                    },
+                )
+            }
+        }
     ) { innerPadding ->
         Surface(
             color = MaterialTheme.colorScheme.surface,
@@ -100,21 +106,31 @@ fun MainNavigation(
                 startDestination = startingRoute,
                 modifier = Modifier.padding(innerPadding),
             ) {
-                navigation(route = NavigationItem.Auth.route, startDestination = NavigationItem.Login.route){
-                    composable(NavigationItem.Login.route){
+                navigation(
+                    route = NavigationItem.Auth.route,
+                    startDestination = NavigationItem.Login.route
+                ) {
+                    composable(NavigationItem.Login.route) {
                         LoginScreen(navController)
                     }
-                    composable(NavigationItem.Register.route){
+                    composable(NavigationItem.Register.route) {
                         RegisterScreen(navController)
                     }
                 }
-                navigation(route = NavigationItem.Main.route, startDestination = NavigationItem.Home.route){
+                navigation(
+                    route = NavigationItem.Main.route,
+                    startDestination = NavigationItem.Home.route
+                ) {
                     composable(NavigationItem.Home.route) {
                         HomeScreen(navController)
                     }
                     composable(NavigationItem.Add.route) {
-                        val startTab = navBackStackEntry?.arguments?.getString("startTab")?.toInt() ?: 0
-                        AddScreen(startTabContent = startTab, snackbarHostState = snackbarHostState){
+                        val startTab =
+                            navBackStackEntry?.arguments?.getString("startTab")?.toInt() ?: 0
+                        AddTransactionScreen(
+                            startTabContent = startTab,
+                            snackbarHostState = snackbarHostState
+                        ) {
                             navController.navigate(NavigationItem.AddJob.route)
                         }
                     }
@@ -123,14 +139,20 @@ fun MainNavigation(
                     }
                     composable(NavigationItem.AddJob.route) {
                         AddJobRoute() {
-                            navController.previousBackStackEntry?.savedStateHandle?.set("reloadJobs",true)
+                            navController.previousBackStackEntry?.savedStateHandle?.set(
+                                "reloadJobs",
+                                true
+                            )
                             navController.navigateUp()
                         }
                     }
                     composable(NavigationItem.UpdateJob.route) {
                         val jobId = navBackStackEntry?.arguments?.getString("jobId")
                         UpdateJobRoute(jobId ?: "") {
-                            navController.previousBackStackEntry?.savedStateHandle?.set("reloadJobs",true)
+                            navController.previousBackStackEntry?.savedStateHandle?.set(
+                                "reloadJobs",
+                                true
+                            )
                             navController.navigateUp()
                         }
                     }

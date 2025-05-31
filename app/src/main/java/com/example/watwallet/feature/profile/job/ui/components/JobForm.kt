@@ -17,14 +17,11 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -79,62 +76,22 @@ fun JobForm(
     CustomDatePickerDialog(
         show = openStartDateDatePicker,
         selectedStartDate = jobForm.startDate,
-        onDismissRequest = {openStartDateDatePicker = false},
-        onSelectDate = {jobViewModel.onSelectStartDate(it)}
+        onDismissRequest = { openStartDateDatePicker = false },
+        onSelectDate = {
+            jobViewModel.onSelectStartDate(it)
+            openStartDateDatePicker = false
+        }
     )
 
     CustomDatePickerDialog(
         show = openEndDateDatePicker,
-        selectedStartDate = jobForm.startDate,
-        onDismissRequest = {openEndDateDatePicker = false},
-        onSelectDate = {jobViewModel.onSelectEndDate(it)}
+        selectedStartDate = jobForm.endDate,
+        onDismissRequest = { openEndDateDatePicker = false },
+        onSelectDate = {
+            jobViewModel.onSelectEndDate(it)
+            openEndDateDatePicker = false
+        }
     )
-//
-//    when {
-//        openStartDateDatePicker -> {
-//            DatePickerDialog(
-//                modifier = Modifier.padding(20.dp),
-//                onDismissRequest = { openStartDateDatePicker = false },
-//                confirmButton = {
-//                    TextButton(onClick = {
-//                        jobViewModel.onSelectStartDate(startDatePickerState.selectedDateMillis!!)
-//                        openStartDateDatePicker = false
-//                    }) {
-//                        Text("OK")
-//                    }
-//                },
-//                dismissButton = {
-//                    TextButton(onClick = { openStartDateDatePicker = false }) {
-//                        Text("Cancel")
-//                    }
-//                }
-//            ) {
-//                DatePicker(state = startDatePickerState, modifier = Modifier.padding(20.dp))
-//            }
-//        }
-//
-//        openEndDateDatePicker -> {
-//            DatePickerDialog(
-//                modifier = Modifier.padding(20.dp),
-//                onDismissRequest = { openEndDateDatePicker = false },
-//                confirmButton = {
-//                    TextButton(onClick = {
-//                        jobViewModel.onSelectEndDate(endDatePickerState.selectedDateMillis!!)
-//                        openEndDateDatePicker = false
-//                    }) {
-//                        Text("OK")
-//                    }
-//                },
-//                dismissButton = {
-//                    TextButton(onClick = { openEndDateDatePicker = false }) {
-//                        Text("Cancel")
-//                    }
-//                }
-//            ) {
-//                DatePicker(state = endDatePickerState, modifier = Modifier.padding(20.dp))
-//            }
-//        }
-//    }
 
     when {
         jobForm.loading -> {

@@ -21,14 +21,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.watwallet.data.repository.GetTransactionDTO
+import com.example.watwallet.data.repository.TransactionGetModel
 import com.example.watwallet.data.repository.TransactionType
 import com.example.watwallet.utils.DateUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionBottomSheet(
-    transaction: GetTransactionDTO,
+    transaction: TransactionGetModel,
     finding: Boolean,
     deleting: Boolean,
     onDismissRequest: () -> Unit,
@@ -44,7 +44,7 @@ fun TransactionBottomSheet(
             Column {
                 Text(text = transaction.description)
                 Text(
-                    text = DateUtils.timestampToLocalDate(transaction.date)
+                    text = transaction.date
                         .toString(),
                     color = Color.Gray
                 )

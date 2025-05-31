@@ -17,5 +17,5 @@ val repositoryModule = module {
     single<UserRepository> { UserRepositoryImpl() }
     single<EmployerRepository> { EmployerRepositoryImpl() }
     single<JobRepository> { JobRepositoryImpl() }
-    single<TransactionsRepository> { TransactionRepositoryImpl() }
+    single<TransactionsRepository> { TransactionRepositoryImpl(get()) }
 }

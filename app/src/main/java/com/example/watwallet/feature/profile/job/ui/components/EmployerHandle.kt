@@ -33,15 +33,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.watwallet.data.repository.Employer
+import com.example.watwallet.data.repository.EmployerGetModel
 
 @ExperimentalMaterial3Api
 @Composable
 fun EmployerHandle(
-    selectedEmployer: Employer?,
+    selectedEmployer: EmployerGetModel?,
     employerSearchField: String,
-    employersSearch: List<Employer>,
+    employersSearch: List<EmployerGetModel>,
     onQueryChange: (String) -> Unit,
-    onSelectEmployer: (employer: Employer) -> Unit,
+    onSelectEmployer: (employer: EmployerGetModel) -> Unit,
     onCreateEmployer: (name: String) -> Unit,
     onClearSearchBar: () -> Unit
 ) {

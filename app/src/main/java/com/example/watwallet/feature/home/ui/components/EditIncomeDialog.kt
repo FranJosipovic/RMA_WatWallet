@@ -12,22 +12,19 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,43 +37,45 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.example.watwallet.feature.addtransaction.viewmodel.tags
+import com.example.watwallet.data.repository.JobGetModel
 import com.example.watwallet.ui.components.CustomDatePickerDialog
 import com.example.watwallet.ui.components.MoneyInputField
 import kotlinx.datetime.LocalDate
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditExpenseDialog(
-    editing: Boolean,
+fun EditIncomeDialog(
+    jobs: List<JobGetModel>,
+    selectedJob: JobGetModel?,
+    onJobSelect: (JobGetModel) -> Unit,
     selectedDate: LocalDate,
     onDateSelect: (Long) -> Unit,
+    baseEarned: String,
+    onBaseEarnedChange: (String) -> Unit,
+    tipsEarned: String,
+    onTipsEarnedChange: (String) -> Unit,
+    totalHoursWorked: String,
+    onTotalHoursWorkedChange: (String) -> Unit,
+    onSaveChanges: () -> Unit,
     onDismissRequest: () -> Unit,
-    selectedTag: String,
-    onTagSelect: (tag: String) -> Unit,
-    amount: String,
-    onAmountChange: (String) -> Unit,
-    description: String,
-    onDescriptionChange: (String) -> Unit,
-    onCancel: () -> Unit,
-    onSaveChanges: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
-    var openDateDatePicker by remember { mutableStateOf(false) }
+    var openDatePicker by remember { mutableStateOf(false) }
+
+    var isJobMenuExpanded by remember { mutableStateOf(false) }
 
     CustomDatePickerDialog(
-        show = openDateDatePicker,
+        show = openDatePicker,
         selectedStartDate = selectedDate,
-        onDismissRequest = { openDateDatePicker = false },
+        onDismissRequest = { openDatePicker = false },
         onSelectDate = {
             onDateSelect(it)
-            openDateDatePicker = false
-        })
-
+            openDatePicker = false
+        }
+    )
     Dialog(
         onDismissRequest = { onDismissRequest() },
     ) {
@@ -94,16 +93,60 @@ fun EditExpenseDialog(
             verticalArrangement = Arrangement.spacedBy(7.dp)
         ) {
             Row(
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.Bottom
             ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    OutlinedTextField(
+                        value = selectedJob?.position ?: "Select Job",
+                        onValueChange = {},
+                        label = { Text("Job") },
+                        readOnly = true,
+                        trailingIcon = {
+                            Icon(
+                                Icons.Default.ArrowDropDown, contentDescription = null,
+                                Modifier.clickable { isJobMenuExpanded = true })
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { isJobMenuExpanded = true }
+                    )
+
+                    DropdownMenu(
+                        expanded = isJobMenuExpanded,
+                        onDismissRequest = { isJobMenuExpanded = false }
+                    ) {
+                        jobs.forEach {
+                            DropdownMenuItem(
+                                text = { Text(it.position) },
+                                onClick = {
+                                    onJobSelect(it)
+                                    isJobMenuExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Base Salary + Tips
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 MoneyInputField(
-                    label = "Amount",
-                    modifier = Modifier.weight(1f),
-                    value = amount,
+                    label = "Base Earned",
+                    modifier = Modifier.weight(2f),
+                    value = baseEarned,
                     isError = false,
                     onValueChange = {
-                        onAmountChange(it)
+                        onBaseEarnedChange(it)
+                    }
+                )
+                MoneyInputField(
+                    label = "Tips",
+                    modifier = Modifier.weight(1f),
+                    value = tipsEarned,
+                    isError = false,
+                    onValueChange = {
+                        onTipsEarnedChange(it)
                     }
                 )
             }
@@ -118,7 +161,7 @@ fun EditExpenseDialog(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { openDateDatePicker = true }
+                        .clickable { openDatePicker = true }
                         .clip(RoundedCornerShape(8.dp))
                         .border(
                             BorderStroke(1.dp, Color.Gray.copy(alpha = 0.5f)),
@@ -142,73 +185,48 @@ fun EditExpenseDialog(
                 }
             }
 
-            // Tag selection
+
             Column {
-                Text("Tag")
-                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                    tags.forEach { tag ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.selectable(
-                                selected = (selectedTag == tag),
-                                onClick = {
-                                    onTagSelect(tag)
+                Text(
+                    text = "Total Hours Worked",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = Color.Black
+                )
 
-                                }
-                            )
-                        ) {
-                            RadioButton(
-                                selected = (selectedTag == tag),
-                                onClick = {
-                                    onTagSelect(tag)
-                                },
-                                colors = RadioButtonDefaults.colors(selectedColor = Color.Blue)
-                            )
-                            Text(tag)
+                Spacer(modifier = Modifier.height(4.dp))
+
+                OutlinedTextField(
+                    value = totalHoursWorked,
+                    onValueChange = {
+                        onTotalHoursWorkedChange(it)
+                    },
+                    placeholder = { Text("0") },
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            focusManager.clearFocus()
                         }
-                    }
-                }
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    singleLine = true,
+                    isError = false
+                )
             }
-
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = description,
-                onValueChange = {
-                    onDescriptionChange(it)
-                },
-                label = { Text("Expense description") },
-                placeholder = { Text("e.g. Taxi") },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        focusManager.clearFocus()
-                    }
-                ),
-                isError = false
-            )
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(
-                    onClick = {
-                        onSaveChanges()
-                    },
+                    onClick = { onSaveChanges() },
                     modifier = Modifier.weight(2f),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB))
                 ) {
-                    if (editing) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = Color.White,
-                            strokeWidth = 2.dp,
-                        )
-                    } else {
-                        Text("Save Transaction", color = Color.White)
-                    }
+                    Text("Save Transaction", color = Color.White)
                 }
                 OutlinedButton(
-                    onClick = {
-                        onCancel()
-                    },
+                    onClick = { onDismissRequest() },
                     modifier = Modifier.weight(1f)
                 ) {
                     Text("Cancel")

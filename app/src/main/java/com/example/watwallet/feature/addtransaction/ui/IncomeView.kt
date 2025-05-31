@@ -1,4 +1,4 @@
-package com.example.watwallet.feature.add.ui
+package com.example.watwallet.feature.addtransaction.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
@@ -45,20 +45,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.watwallet.feature.add.viewmodel.AddIncomeFormEvent
-import com.example.watwallet.feature.add.viewmodel.AddIncomeViewModel
+import com.example.watwallet.feature.addtransaction.viewmodel.AddIncomeFormEvent
+import com.example.watwallet.feature.addtransaction.viewmodel.AddTransactionViewModel
 import com.example.watwallet.ui.components.CustomDatePickerDialog
 import com.example.watwallet.ui.components.MoneyInputField
 import kotlinx.coroutines.launch
 
 
 @Composable
-fun AddIncomeView(snackbarHostState: SnackbarHostState, addIncomeViewModel: AddIncomeViewModel, onIncomeAdded:()->Unit, onAddJob:()->Unit) {
+fun AddIncomeView(
+    snackbarHostState: SnackbarHostState,
+    addTransactionViewModel: AddTransactionViewModel,
+    onIncomeAdded: () -> Unit,
+    onAddJob: () -> Unit
+) {
     val focusManager = LocalFocusManager.current
 
-    val jobs = addIncomeViewModel.jobs
-
-    val state by addIncomeViewModel.state.collectAsState()
+    val jobs by addTransactionViewModel.jobs.collectAsState()
+    val state by addTransactionViewModel.incomeState.collectAsState()
 
     var isJobMenuExpanded by remember { mutableStateOf(false) }
 
@@ -69,9 +73,9 @@ fun AddIncomeView(snackbarHostState: SnackbarHostState, addIncomeViewModel: AddI
     CustomDatePickerDialog(
         show = openDatePicker,
         selectedStartDate = state.date,
-        onDismissRequest = {openDatePicker = false },
+        onDismissRequest = { openDatePicker = false },
         onSelectDate = {
-            addIncomeViewModel.onEvent(
+            addTransactionViewModel.onIncomeEvent(
                 AddIncomeFormEvent.SelectedDateChanged(it)
             )
             openDatePicker = false
@@ -93,7 +97,10 @@ fun AddIncomeView(snackbarHostState: SnackbarHostState, addIncomeViewModel: AddI
         Text("Add Income", fontSize = 25.sp, fontWeight = FontWeight.Bold)
         Text("Enter the details of your income", fontSize = 15.sp, color = Color.Gray)
         // Job selector row
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.Bottom
+        ) {
             Box(modifier = Modifier.weight(1f)) {
                 OutlinedTextField(
                     value = state.job?.position ?: "Select Job",
@@ -118,7 +125,11 @@ fun AddIncomeView(snackbarHostState: SnackbarHostState, addIncomeViewModel: AddI
                         DropdownMenuItem(
                             text = { Text(it.position) },
                             onClick = {
-                                addIncomeViewModel.onEvent(AddIncomeFormEvent.JobChanged(it))
+                                addTransactionViewModel.onIncomeEvent(
+                                    AddIncomeFormEvent.JobChanged(
+                                        it
+                                    )
+                                )
                                 isJobMenuExpanded = false
                             }
                         )
@@ -127,7 +138,7 @@ fun AddIncomeView(snackbarHostState: SnackbarHostState, addIncomeViewModel: AddI
             }
 
             IconButton(
-                onClick = {onAddJob()},
+                onClick = { onAddJob() },
                 modifier = Modifier
                     .border(width = 1.dp, color = Color.Black, shape = RoundedCornerShape(6.dp))
                     .height(56.dp)
@@ -143,7 +154,7 @@ fun AddIncomeView(snackbarHostState: SnackbarHostState, addIncomeViewModel: AddI
                 value = state.baseEarned,
                 isError = state.baseEarnedError != null,
                 onValueChange = {
-                    addIncomeViewModel.onEvent(AddIncomeFormEvent.BaseEarnedChanged(it))
+                    addTransactionViewModel.onIncomeEvent(AddIncomeFormEvent.BaseEarnedChanged(it))
                 }
             )
             MoneyInputField(
@@ -152,7 +163,7 @@ fun AddIncomeView(snackbarHostState: SnackbarHostState, addIncomeViewModel: AddI
                 value = state.tipsEarned,
                 isError = state.tipsEarnedError != null,
                 onValueChange = {
-                    addIncomeViewModel.onEvent(AddIncomeFormEvent.TipsEarnedChanged(it))
+                    addTransactionViewModel.onIncomeEvent(AddIncomeFormEvent.TipsEarnedChanged(it))
                 }
             )
         }
@@ -205,13 +216,17 @@ fun AddIncomeView(snackbarHostState: SnackbarHostState, addIncomeViewModel: AddI
             OutlinedTextField(
                 value = state.totalHoursWorked,
                 onValueChange = {
-                    addIncomeViewModel.onEvent(AddIncomeFormEvent.TotalHoursWorkedChanged(it))
+                    addTransactionViewModel.onIncomeEvent(
+                        AddIncomeFormEvent.TotalHoursWorkedChanged(
+                            it
+                        )
+                    )
                 },
                 placeholder = { Text("0") },
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
                 keyboardActions = KeyboardActions(
                     onDone = {
-                        focusManager.clearFocus() // 👈 this dismisses keyboard & clears focus
+                        focusManager.clearFocus()
                     }
                 ),
                 modifier = Modifier
@@ -226,7 +241,7 @@ fun AddIncomeView(snackbarHostState: SnackbarHostState, addIncomeViewModel: AddI
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Button(
                 onClick = {
-                    addIncomeViewModel.onEvent(AddIncomeFormEvent.OnSubmit(onSuccess = {
+                    addTransactionViewModel.onIncomeEvent(AddIncomeFormEvent.OnSubmit(onSuccess = {
                         scope.launch {
                             snackbarHostState.showSnackbar(
                                 message = "Transaction Added Successfully",
@@ -242,7 +257,7 @@ fun AddIncomeView(snackbarHostState: SnackbarHostState, addIncomeViewModel: AddI
                 Text("Save Transaction", color = Color.White)
             }
             OutlinedButton(
-                onClick = { addIncomeViewModel.onEvent(AddIncomeFormEvent.OnCancel) },
+                onClick = { addTransactionViewModel.onIncomeEvent(AddIncomeFormEvent.OnCancel) },
                 modifier = Modifier.weight(1f)
             ) {
                 Text("Cancel")
@@ -250,5 +265,3 @@ fun AddIncomeView(snackbarHostState: SnackbarHostState, addIncomeViewModel: AddI
         }
     }
 }
-
-

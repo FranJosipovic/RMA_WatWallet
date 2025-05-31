@@ -6,17 +6,17 @@ import android.os.Build
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.watwallet.data.repository.CreateJobDTO
-import com.example.watwallet.data.repository.Employer
+import com.example.watwallet.data.repository.EmployerCreateModel
+import com.example.watwallet.data.repository.EmployerGetModel
 import com.example.watwallet.data.repository.EmployerRepository
+import com.example.watwallet.data.repository.JobCreateModel
 import com.example.watwallet.data.repository.JobRepository
 import com.example.watwallet.data.repository.JobUpdateModel
+import com.example.watwallet.data.repository.User
+import com.example.watwallet.data.repository.UserRepository
 import com.example.watwallet.feature.profile.job.data.JobUIState
 import com.example.watwallet.utils.DateUtils
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
 import com.google.firebase.firestore.GeoPoint
-import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,7 +27,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -37,6 +36,7 @@ import kotlinx.datetime.toLocalDateTime
 class JobViewModel(
     private val jobRepository: JobRepository,
     private val employerRepository: EmployerRepository,
+    private val userRepository: UserRepository,
     private val geocoder: Geocoder
 ) : ViewModel() {
 
@@ -46,8 +46,8 @@ class JobViewModel(
     private val _employerSearchField = MutableStateFlow<String>("")
     val employerSearchField: StateFlow<String> = _employerSearchField.asStateFlow()
 
-    private val _employersSearchResults = MutableStateFlow<List<Employer>>(emptyList())
-    val employersSearchResultsState: StateFlow<List<Employer>> =
+    private val _employersSearchResults = MutableStateFlow<List<EmployerGetModel>>(emptyList())
+    val employersSearchResultsState: StateFlow<List<EmployerGetModel>> =
         _employersSearchResults.asStateFlow()
 
     private val _locationSearchField = MutableStateFlow("")
@@ -56,6 +56,7 @@ class JobViewModel(
     private val _locationSearchResults = MutableStateFlow<List<Address>>(emptyList())
     val locationSearchResults: StateFlow<List<Address>> = _locationSearchResults.asStateFlow()
 
+    private lateinit var user: User
 
     fun onJobDescriptionChange(value: String) {
         _jobForm.update { it.copy(description = value) }
@@ -76,6 +77,10 @@ class JobViewModel(
     }
 
     init {
+
+        viewModelScope.launch {
+            user = userRepository.getUser()!!
+        }
 
         viewModelScope.launch {
             val result = employerRepository.get(10)
@@ -124,7 +129,7 @@ class JobViewModel(
         }
     }
 
-    fun selectEmployer(employer: Employer) {
+    fun selectEmployer(employer: EmployerGetModel) {
         _jobForm.update { it.copy(employer = employer) }
     }
 
@@ -132,9 +137,9 @@ class JobViewModel(
         _jobForm.update { it.copy(employer = null) }
     }
 
-    fun createEmployer(employerName: String, onSuccess: (employer: Employer) -> Unit) {
+    fun createEmployer(employerName: String, onSuccess: (employer: EmployerGetModel) -> Unit) {
         viewModelScope.launch {
-            val newEmployer = employerRepository.create(employerName)
+            val newEmployer = employerRepository.create(EmployerCreateModel(employerName))
             _jobForm.update { it.copy(employer = newEmployer) }
             newEmployer?.let { onSuccess(it) }
         }
@@ -156,47 +161,42 @@ class JobViewModel(
         viewModelScope.launch {
             _jobForm.update { it.copy(loading = true) }
 
-            val job = jobRepository.getJob(jobId)
-            val employer = job.employer.get().await()
+            val job = jobRepository.getJob(userId = user.uid, jobId = jobId)
 
-            _jobForm.update {
-                it.copy(
-                    employer = Employer(
-                        uid = employer.id,
-                        name = employer.getString("name") ?: ""
-                    ),
-                    location = geocoder.getFromLocationName(job.locationInfo, 1)?.first(),
-                    startDate = DateUtils.timestampToLocalDate(job.startDate),
-                    endDate = DateUtils.timestampToLocalDate(job.endDate),
-                    position = job.position,
-                    description = job.description,
-                    locationInfo = job.locationInfo,
-                    loading = false
-                )
+            if (job != null) {
+                _jobForm.update {
+                    it.copy(
+                        employer = job.employer,
+                        location = geocoder.getFromLocationName(job.locationInfo, 1)?.first(),
+                        startDate = job.startDate,
+                        endDate = job.endDate,
+                        position = job.position,
+                        description = job.description,
+                        locationInfo = job.locationInfo,
+                        loading = false
+                    )
+                }
+
+                onLoad(_jobForm.value.startDate, _jobForm.value.endDate)
             }
-
-            onLoad(_jobForm.value.startDate, _jobForm.value.endDate)
+            _jobForm.update { it.copy(loading = false) }
         }
     }
 
     fun onAddJob(onSuccess: () -> Unit) {
         viewModelScope.launch {
             jobRepository.createJob(
-                userId = Firebase.auth.currentUser!!.uid,
-                job = CreateJobDTO(
+                jobCreateModel = JobCreateModel(
                     description = _jobForm.value.description,
                     position = _jobForm.value.position,
                     locationInfo = "${_jobForm.value.location?.featureName}, ${_jobForm.value.location?.countryName}",
-                    location = GeoPoint(
-                        _jobForm.value.location?.latitude!!,
-                        _jobForm.value.location?.longitude!!
-                    ),
-                    employer = Firebase.firestore.collection("employers")
-                        .document(_jobForm.value.employer!!.uid),
-                    season = Firebase.firestore.collection("seasons")
-                        .document("GpA2hWiQ3RJKZVsJjk2q"),
-                    startDate = DateUtils.localDateToTimestamp(_jobForm.value.startDate),
-                    endDate = DateUtils.localDateToTimestamp(_jobForm.value.endDate),
+                    locationLongitude = _jobForm.value.location?.longitude!!,
+                    locationLatitude = _jobForm.value.location?.latitude!!,
+                    startDate = _jobForm.value.startDate,
+                    endDate = _jobForm.value.endDate,
+                    employerId = _jobForm.value.employer!!.id,
+                    season = DateUtils.currentYear,
+                    userId = user.uid,
                 )
             )
             onSuccess()
@@ -206,20 +206,19 @@ class JobViewModel(
     fun onUpdateJob(jobId: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             jobRepository.updateJob(
-                userId = "",
                 jobId = jobId,
                 JobUpdateModel(
+                    userId = user.uid,
                     description = _jobForm.value.description,
-                    employer = Firebase.firestore.collection("employers")
-                        .document(_jobForm.value.employer!!.uid),
                     locationInfo = "${_jobForm.value.location?.featureName}, ${_jobForm.value.location?.countryName}",
                     location = GeoPoint(
                         _jobForm.value.location?.latitude!!,
                         _jobForm.value.location?.longitude!!
                     ),
                     position = _jobForm.value.position,
-                    startDate = DateUtils.localDateToTimestamp(_jobForm.value.startDate),
-                    endDate = DateUtils.localDateToTimestamp(_jobForm.value.endDate)
+                    startDate = _jobForm.value.startDate,
+                    endDate = _jobForm.value.endDate,
+                    employerId = _jobForm.value.employer!!.id
                 )
             )
             onSuccess()

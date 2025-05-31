@@ -2,13 +2,14 @@ package com.example.watwallet.data.repository
 
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.toObject
 import kotlinx.coroutines.tasks.await
 
 class EmployerRepositoryImpl : EmployerRepository {
 
     private val db = Firebase.firestore
 
-    override suspend fun search(searchTerm: String): List<Employer> {
+    override suspend fun search(searchTerm: String): List<EmployerGetModel> {
         return try {
             val result = db.collection("employers")
                 .get()
@@ -19,7 +20,7 @@ class EmployerRepositoryImpl : EmployerRepository {
             result.documents.mapNotNull { doc ->
                 val uid = doc.id
                 val name = doc.getString("name") ?: return@mapNotNull null
-                Employer(uid, name)
+                EmployerGetModel(uid, name)
             }.filter { employer ->
                 employer.name.lowercase().contains(lowerSearch)
             }
@@ -28,22 +29,20 @@ class EmployerRepositoryImpl : EmployerRepository {
         }
     }
 
-    override suspend fun create(employerName: String): Employer? {
+    override suspend fun create(employerCreateModel: EmployerCreateModel): EmployerGetModel? {
         return try {
-            val employer = hashMapOf("name" to employerName)
-            val res = db.collection("employers").add(employer).await()
+            val res = db.collection("employers").add(employerCreateModel).await()
             val doc = res.get().await()
-            Employer(
-                uid = doc.id,
+            EmployerGetModel(
+                id = doc.id,
                 name = doc.getString("name") ?: ""
             )
         } catch (e: Exception) {
             null
         }
-
     }
 
-    override suspend fun get(count: Long?): List<Employer> {
+    override suspend fun get(count: Long?): List<EmployerGetModel> {
         val query = db.collection("employers")
 
         val snapshot = if (count != null) {
@@ -52,7 +51,15 @@ class EmployerRepositoryImpl : EmployerRepository {
             query.get().await()
         }
 
-        return snapshot.documents.mapNotNull { Employer(it.id, it.getString("name") ?: "") }
+        return snapshot.documents.mapNotNull { EmployerGetModel(it.id, it.getString("name") ?: "") }
     }
 
+    override suspend fun get(employerId: String): EmployerGetModel? {
+        val employerRes = db.collection("employers").document(employerId).get().await()
+        val employer = employerRes.toObject<Employer>() ?: return null
+        return EmployerGetModel(
+            id = employerRes.id,
+            name = employer.name
+        )
+    }
 }

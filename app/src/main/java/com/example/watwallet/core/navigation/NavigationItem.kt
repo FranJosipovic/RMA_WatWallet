@@ -32,12 +32,7 @@ sealed class NavigationItem(
     }
 }
 
-val authNavigationItems = listOf(
-    NavigationItem.Login,
-    NavigationItem.Register
-)
-
-val mainNavigationItems = listOf(
+val navigationBarItems = listOf(
     NavigationItem.Home,
     NavigationItem.Add,
     NavigationItem.Profile

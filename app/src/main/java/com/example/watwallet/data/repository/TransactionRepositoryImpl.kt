@@ -1,59 +1,133 @@
 package com.example.watwallet.data.repository
 
+import android.util.Log
+import com.example.watwallet.utils.DateUtils
 import com.google.firebase.Firebase
-import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentReference
-import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.toObject
 import kotlinx.coroutines.tasks.await
-import kotlin.math.exp
 
-class TransactionRepositoryImpl : TransactionsRepository {
+class TransactionRepositoryImpl(
+    private val jobRepository: JobRepository
+) : TransactionsRepository {
 
-    private  val firestore = Firebase.firestore
+    private val db = Firebase.firestore
 
-    override suspend fun addIncome(incomeDTO: CreateIncomeDTO): DocumentReference {
-        return firestore.collection("incomes").add(incomeDTO).await()
+    override suspend fun addIncome(incomeCreateModel: IncomeCreateModel): DocumentReference {
+        val userRef = db.collection("users").document(incomeCreateModel.userId)
+        val jobRef = userRef.collection("jobs").document(incomeCreateModel.jobId)
+
+        val income = Income(
+            job = jobRef,
+            user = userRef,
+            season = incomeCreateModel.season.toLong(),
+            baseEarned = incomeCreateModel.baseEarned.toDouble(),
+            tipsEarned = incomeCreateModel.tipsEarned.toDouble(),
+            hoursWorked = incomeCreateModel.hoursWorked.toLong(),
+            date = DateUtils.localDateToTimestamp(incomeCreateModel.date)
+        )
+        return db.collection("incomes").add(income).await()
     }
 
-    override suspend fun addExpense(expenseDTO: CreateExpenseDTO): DocumentReference {
-        return firestore.collection("expenses").add(expenseDTO).await()
+    override suspend fun addExpense(expenseCreateModel: ExpenseCreateModel): DocumentReference {
+        val userRef = db.collection("users").document(expenseCreateModel.userId)
+
+        val income = Expense(
+            amount = expenseCreateModel.amount.toDouble(),
+            date = DateUtils.localDateToTimestamp(expenseCreateModel.date),
+            description = expenseCreateModel.description,
+            season = expenseCreateModel.season.toLong(),
+            tag = expenseCreateModel.tag,
+            user = userRef
+        )
+        return db.collection("expenses").add(income).await()
     }
 
-    override suspend fun getExpense(id: String): Expense? {
+    override suspend fun getExpense(id: String): ExpenseGetModel? {
         return try {
-            val expenseRes = firestore.collection("expenses").document(id).get().await()
-            Expense(
-                uid = expenseRes.id,
-                amount = expenseRes.get("amount") as Number,
-                date = expenseRes.getTimestamp("date") ?: Timestamp.now(),
-                description = expenseRes.getString("description") ?: "",
-                seasonId = expenseRes.getString("seasonId") ?: "",
-                tag = expenseRes.getString("tag") ?: "",
-                userId = expenseRes.getString("userId") ?: ""
+            val expenseRes =
+                db.collection("expenses").document(id).get().await()
+            val expense = expenseRes.toObject<Expense>() ?: return null
+
+            ExpenseGetModel(
+                id = expenseRes.id,
+                amount = expense.amount,
+                date = DateUtils.timestampToLocalDate(expense.date),
+                description = expense.description,
+                season = expense.season,
+                tag = expense.tag,
+                userId = expense.user!!.id
             )
-        }catch (e:Exception){
+        } catch (e: Exception) {
+            Log.e("Exc",e.message ?: "")
             null
         }
     }
 
-    override suspend fun updateExpense(expense: Expense) {
-        firestore.collection("expenses").document(expense.uid).update(
+    override suspend fun getIncome(id: String): IncomeGetModel? {
+        return try {
+            val incomeRes =
+                db.collection("incomes").document(id).get().await()
+            val job = incomeRes.getDocumentReference("job")?.let { job ->
+                incomeRes.getDocumentReference("user")?.let { user ->
+                    jobRepository.getJob(
+                        user.id, job.id
+                    )
+                }
+            }
+
+            if (incomeRes == null || job == null) return null
+
+            val income = incomeRes.toObject<Income>()!!
+
+            IncomeGetModel(
+                id = incomeRes.id,
+                date = DateUtils.timestampToLocalDate(income.date),
+                season = income.season,
+                userId = income.user!!.id,
+                job = job,
+                baseEarned = income.baseEarned,
+                tipsEarned = income.tipsEarned,
+                hoursWorked = income.hoursWorked,
+            )
+        } catch (e: Exception) {
+            Log.e("Exc",e.message ?: "")
+            null
+        }
+    }
+
+    override suspend fun updateExpense(expenseId: String, expense: ExpenseUpdateModel) {
+        db.collection("expenses").document(expenseId).update(
             hashMapOf(
                 "amount" to expense.amount,
-                "date" to expense.date,
+                "date" to DateUtils.localDateToTimestamp(expense.date),
                 "description" to expense.description,
-                "seasonId" to expense.seasonId,
                 "tag" to expense.tag,
-                "userId" to expense.userId
             )
         ).await()
     }
 
-    override suspend fun getAllTransactions(userId: String): OverallTransactionsDTO {
+    override suspend fun updateIncome(incomeId: String, income: IncomeUpdateModel) {
+        val job = db.collection("jobs").document(income.jobId)
+
+        db.collection("incomes").document(incomeId).update(
+            hashMapOf(
+                "job" to job,
+                "baseEarned" to income.baseEarned,
+                "tipsEarned" to income.tipsEarned,
+                "hoursWorked" to income.hoursWorked,
+                "date" to DateUtils.localDateToTimestamp(income.date)
+            )
+        ).await()
+    }
+
+    override suspend fun getAllTransactions(userId: String): TotalTransactionsModel {
         // Fetch incomes and expenses
-        val incomesSnapshot = firestore.collection("incomes").whereEqualTo("userId", userId).get().await()
-        val expensesSnapshot = firestore.collection("expenses").whereEqualTo("userId", userId).get().await()
+        val userRef = db.collection("users").document(userId)
+        val incomesSnapshot = db.collection("incomes").whereEqualTo("user", userRef).get().await()
+        val expensesSnapshot =
+            db.collection("expenses").whereEqualTo("user", userRef).get().await()
 
         // Calculate total incomes
         val totalIncomes = incomesSnapshot.documents.sumOf { doc ->
@@ -67,19 +141,17 @@ class TransactionRepositoryImpl : TransactionsRepository {
 
         // Prepare transaction lists
         val incomeTransactions = incomesSnapshot.documents.mapNotNull { doc ->
-            val jobId = doc.getString("jobId") ?: return@mapNotNull null
-            val totalAmount = (doc.getDouble("baseEarned") ?: 0.0) + (doc.getDouble("tipsEarned") ?: 0.0)
+            val job = doc.getDocumentReference("job")?.get()?.await() ?: return@mapNotNull null
+            val totalAmount =
+                (doc.getDouble("baseEarned") ?: 0.0) + (doc.getDouble("tipsEarned") ?: 0.0)
             val date = doc.getTimestamp("date") ?: return@mapNotNull null
 
-            // Fetch job name from jobs collection (assuming it exists)
-            val jobName = firestore.collection("jobs").document(jobId).get().await().getString("position") ?: "Unknown Job"
-
-            GetTransactionDTO(
+            TransactionGetModel(
                 uid = doc.id,
                 transactionType = TransactionType.Income,
                 totalAmount = totalAmount.toString(),
-                date = date,
-                description = "Salary from $jobName"
+                date = DateUtils.timestampToLocalDate(date),
+                description = "Salary from ${job.getString("position")}"
             )
         }
 
@@ -88,35 +160,32 @@ class TransactionRepositoryImpl : TransactionsRepository {
             val date = doc.getTimestamp("date") ?: return@mapNotNull null
             val description = doc.getString("description") ?: "No Description"
 
-            GetTransactionDTO(
+            TransactionGetModel(
                 uid = doc.id,
                 transactionType = TransactionType.Expense,
                 totalAmount = amount.toString(),
-                date = date,
+                date = DateUtils.timestampToLocalDate(date),
                 description = description
             )
         }
 
         // Merge both lists
-        val allTransactions = (incomeTransactions + expenseTransactions).sortedByDescending { it.date }
+        val allTransactions =
+            (incomeTransactions + expenseTransactions).sortedByDescending { it.date }
 
         // Return the final DTO
-        return OverallTransactionsDTO(
+        return TotalTransactionsModel(
             earnings = totalIncomes,
             expenses = totalExpenses,
             transactions = allTransactions
         )
     }
 
-    override suspend fun deleteTransaction(id: String, transactionType: TransactionType) {
-        when(transactionType){
-            TransactionType.Income ->{
-                firestore.collection("incomes").document(id).delete().await()
-            }
-            TransactionType.Expense->{
-                firestore.collection("expenses").document(id).delete().await()
-            }
-        }
+    override suspend fun deleteIncome(incomeId: String) {
+        db.collection("incomes").document(incomeId).delete().await()
     }
 
+    override suspend fun deleteExpense(expenseId: String) {
+        db.collection("expenses").document(expenseId).delete().await()
+    }
 }

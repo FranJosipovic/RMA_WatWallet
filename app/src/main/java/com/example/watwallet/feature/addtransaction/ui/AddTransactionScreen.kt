@@ -1,4 +1,4 @@
-package com.example.watwallet.feature.add.ui
+package com.example.watwallet.feature.addtransaction.ui
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -17,18 +17,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.watwallet.app.sendTransactionNotification
-import com.example.watwallet.feature.add.viewmodel.AddExpenseViewModel
-import com.example.watwallet.feature.add.viewmodel.AddIncomeViewModel
+import com.example.watwallet.feature.addtransaction.viewmodel.AddTransactionViewModel
 import com.example.watwallet.ui.components.CustomTabView
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun AddScreen(startTabContent:Int = 0, snackbarHostState: SnackbarHostState ,onAddJob:()->Unit){
+fun AddTransactionScreen(startTabContent:Int = 0, snackbarHostState: SnackbarHostState, onAddJob:()->Unit){
 
     val context = LocalContext.current
 
-    val addIncomeViewModel:AddIncomeViewModel = koinViewModel()
-    val addExpenseViewModel: AddExpenseViewModel = koinViewModel()
+    val addTransactionViewModel:AddTransactionViewModel = koinViewModel()
 
     val tabs = listOf("Expense", "Income")
     val activeTabIndex = remember { mutableIntStateOf(startTabContent) }
@@ -37,7 +35,7 @@ fun AddScreen(startTabContent:Int = 0, snackbarHostState: SnackbarHostState ,onA
         {
             AddExpenseView(
                 snackbarHostState = snackbarHostState,
-                addExpenseViewModel = addExpenseViewModel,
+                addTransactionViewModel = addTransactionViewModel,
                 onExpenseAdded = {
                     sendTransactionNotification(context,"Expense Added Successfully")
                 }
@@ -46,7 +44,7 @@ fun AddScreen(startTabContent:Int = 0, snackbarHostState: SnackbarHostState ,onA
         {
             AddIncomeView(
                 snackbarHostState = snackbarHostState,
-                addIncomeViewModel = addIncomeViewModel,
+                addTransactionViewModel = addTransactionViewModel,
                 onIncomeAdded = {
                     sendTransactionNotification(context,"Expense Added Successfully")
                 },

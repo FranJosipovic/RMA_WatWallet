@@ -7,5 +7,5 @@ import org.koin.dsl.module
 
 var jobViewModelModule = module {
     single { Geocoder(get()) }
-    viewModel { JobViewModel(get(),get(),get()) }
+    viewModel { JobViewModel(get(), get(), get(), get()) }
 }

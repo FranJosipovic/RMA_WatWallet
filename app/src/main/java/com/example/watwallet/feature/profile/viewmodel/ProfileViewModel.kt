@@ -3,19 +3,15 @@ package com.example.watwallet.feature.profile.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.watwallet.data.repository.AuthRepository
-import com.example.watwallet.data.repository.Employer
 import com.example.watwallet.data.repository.JobRepository
-import com.example.watwallet.data.repository.Season
 import com.example.watwallet.data.repository.UserRepository
-import com.example.watwallet.feature.profile.data.JobUI
+import com.example.watwallet.feature.profile.data.JobUIState
 import com.example.watwallet.feature.profile.data.ProfileUIState
-import com.example.watwallet.utils.DateUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 class ProfileViewModel(
     private val userRepository: UserRepository,
@@ -43,25 +39,17 @@ class ProfileViewModel(
                     it.copy(
                         user = user,
                         jobs = jobs.map { job ->
-                            val employer = job.employer.get().await()
-                            val season = job.season.get().await()
-                            JobUI(
+                            JobUIState(
                                 id = job.id,
                                 description = job.description,
-                                employer = Employer(
-                                    employer.id,
-                                    employer.getString("name") ?: ""
-                                ),
+                                employer = job.employer,
                                 locationInfo = job.locationInfo,
-                                location = job.location,
                                 position = job.position,
-                                season = Season(
-                                    id = season.id,
-                                    season = season.getLong("season") ?: DateUtils.currentYear,
-                                    current = season.getBoolean("current") ?: true
-                                ),
-                                startDate = DateUtils.timestampToLocalDate(job.startDate),
-                                endDate = DateUtils.timestampToLocalDate(job.endDate)
+                                season = job.season,
+                                startDate = job.startDate,
+                                endDate = job.endDate,
+                                locationLongitude = job.locationLongitude,
+                                locationLatitude = job.locationLatitude,
                             )
                         },
                         loading = false
@@ -94,7 +82,23 @@ class ProfileViewModel(
             _profileUIState.update { it.copy(loading = true) }
             val user = userRepository.loadUserData()
             if (user != null) {
-                _profileUIState.update { it.copy(user = user, loading = false) }
+                val jobs = jobsRepository.getJobs(userId = user.uid)
+                _profileUIState.update {
+                    it.copy(user = user, loading = false, jobs = jobs.map { job ->
+                        JobUIState(
+                            id = job.id,
+                            description = job.description,
+                            employer = job.employer,
+                            locationInfo = job.locationInfo,
+                            position = job.position,
+                            season = job.season,
+                            startDate = job.startDate,
+                            endDate = job.endDate,
+                            locationLongitude = job.locationLongitude,
+                            locationLatitude = job.locationLatitude,
+                        )
+                    })
+                }
             } else {
                 _profileUIState.update {
                     it.copy(

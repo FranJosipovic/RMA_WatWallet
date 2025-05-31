@@ -1,4 +1,4 @@
-package com.example.watwallet.feature.add.ui
+package com.example.watwallet.feature.addtransaction.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
@@ -42,9 +42,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.watwallet.feature.add.viewmodel.AddExpenseFormEvent
-import com.example.watwallet.feature.add.viewmodel.AddExpenseViewModel
-import com.example.watwallet.feature.add.viewmodel.tags
+import com.example.watwallet.feature.addtransaction.viewmodel.AddExpenseFormEvent
+import com.example.watwallet.feature.addtransaction.viewmodel.AddTransactionViewModel
+import com.example.watwallet.feature.addtransaction.viewmodel.tags
 import com.example.watwallet.ui.components.CustomDatePickerDialog
 import com.example.watwallet.ui.components.MoneyInputField
 import kotlinx.coroutines.launch
@@ -52,12 +52,12 @@ import kotlinx.coroutines.launch
 @Composable
 fun AddExpenseView(
     snackbarHostState: SnackbarHostState,
-    addExpenseViewModel: AddExpenseViewModel,
+    addTransactionViewModel: AddTransactionViewModel,
     onExpenseAdded: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
 
-    val state by addExpenseViewModel.state.collectAsState()
+    val state by addTransactionViewModel.expenseState.collectAsState()
 
     var openDatePicker by remember { mutableStateOf(false) }
 
@@ -68,7 +68,7 @@ fun AddExpenseView(
         selectedStartDate = state.date,
         onDismissRequest = {openDatePicker = false },
         onSelectDate = {
-            addExpenseViewModel.onEvent(
+            addTransactionViewModel.onExpenseEvent(
                 AddExpenseFormEvent.SelectedDateChanged(it)
             )
             openDatePicker = false
@@ -90,7 +90,6 @@ fun AddExpenseView(
         Text("Add Expense", fontSize = 25.sp, fontWeight = FontWeight.Bold)
         Text("Enter the details of your expense", fontSize = 15.sp, color = Color.Gray)
 
-        // Amount + Currency
         Row(
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -100,7 +99,7 @@ fun AddExpenseView(
                 modifier = Modifier.weight(1f),
                 value = state.amount,
                 isError = state.amountError != null,
-                onValueChange = { addExpenseViewModel.onEvent(AddExpenseFormEvent.AmountChanged(it)) }
+                onValueChange = { addTransactionViewModel.onExpenseEvent(AddExpenseFormEvent.AmountChanged(it)) }
             )
         }
 
@@ -138,7 +137,6 @@ fun AddExpenseView(
             }
         }
 
-        // Tag selection
         Column {
             Text("Tag")
             Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -148,7 +146,7 @@ fun AddExpenseView(
                         modifier = Modifier.selectable(
                             selected = (state.tag == tag),
                             onClick = {
-                                addExpenseViewModel.onEvent(
+                                addTransactionViewModel.onExpenseEvent(
                                     AddExpenseFormEvent.TagChanged(
                                         tag
                                     )
@@ -159,7 +157,7 @@ fun AddExpenseView(
                         RadioButton(
                             selected = (state.tag == tag),
                             onClick = {
-                                addExpenseViewModel.onEvent(
+                                addTransactionViewModel.onExpenseEvent(
                                     AddExpenseFormEvent.TagChanged(
                                         tag
                                     )
@@ -176,7 +174,7 @@ fun AddExpenseView(
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
             value = state.description,
-            onValueChange = { addExpenseViewModel.onEvent(AddExpenseFormEvent.DescriptionChanged(it)) },
+            onValueChange = { addTransactionViewModel.onExpenseEvent(AddExpenseFormEvent.DescriptionChanged(it)) },
             label = { Text("Expense description") },
             placeholder = { Text("e.g. Taxi") },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -192,7 +190,7 @@ fun AddExpenseView(
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Button(
                 onClick = {
-                    addExpenseViewModel.onEvent(AddExpenseFormEvent.OnSubmit(onSuccess = {
+                    addTransactionViewModel.onExpenseEvent(AddExpenseFormEvent.OnSubmit(onSuccess = {
                         scope.launch {
                             snackbarHostState.showSnackbar(
                                 message = "Transaction Added Successfully",
@@ -209,7 +207,7 @@ fun AddExpenseView(
             }
             OutlinedButton(
                 onClick = {
-                    addExpenseViewModel.onEvent(AddExpenseFormEvent.OnCancel)
+                    addTransactionViewModel.onExpenseEvent(AddExpenseFormEvent.OnCancel)
                 },
                 modifier = Modifier.weight(1f)
             ) {
@@ -217,9 +215,4 @@ fun AddExpenseView(
             }
         }
     }
-}
-
-@Composable
-fun ExpenseForm() {
-
 }

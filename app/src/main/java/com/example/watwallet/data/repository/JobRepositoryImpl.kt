@@ -1,93 +1,102 @@
 package com.example.watwallet.data.repository
 
 import android.util.Log
+import com.example.watwallet.utils.DateUtils
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.auth
 import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.toObject
 import kotlinx.coroutines.tasks.await
+import kotlinx.datetime.LocalDate
 
-data class CreateJobDTO(
+data class JobCreateModel(
     val description: String,
-    val employer: DocumentReference,
+    val employerId: String,
     val locationInfo: String,
-    val location: GeoPoint,
+    val locationLongitude: Double,
+    val locationLatitude: Double,
     val position: String,
-    val season: DocumentReference,
-    val startDate: Timestamp,
-    val endDate: Timestamp
+    val season: Number,
+    val userId: String,
+    val startDate: LocalDate,
+    val endDate: LocalDate
 )
 
 data class JobUpdateModel(
     val description: String,
-    val employer: DocumentReference,
+    val employerId: String,
+    val userId: String,
     val locationInfo: String,
     val location: GeoPoint,
     val position: String,
-    val startDate: Timestamp,
-    val endDate: Timestamp
+    val startDate: LocalDate,
+    val endDate: LocalDate
+)
+
+data class JobGetModel(
+    val id: String,
+    val description: String,
+    val employer: EmployerGetModel,
+    val locationInfo: String,
+    val locationLatitude: Double,
+    val locationLongitude: Double,
+    val position: String,
+    val season: Number,
+    val startDate: LocalDate,
+    val endDate: LocalDate
 )
 
 data class Job(
-    val id: String,
-    val active: Boolean,
-    val deleted: Boolean,
-    val description: String,
-    val employer: DocumentReference,
-    val locationInfo: String,
-    val location: GeoPoint,
-    val position: String,
-    val season: DocumentReference,
-    val startDate: Timestamp,
-    val endDate: Timestamp
+    val active: Boolean = false,
+    val deleted: Boolean = false,
+    val description: String = "",
+    val employer: DocumentReference? = null,
+    val locationInfo: String = "",
+    val location: GeoPoint = GeoPoint(0.0, 0.0),
+    val position: String = "",
+    val season: Long = DateUtils.currentYear.toLong(),
+    val startDate: Timestamp = Timestamp.now(),
+    val endDate: Timestamp = Timestamp.now()
 )
 
 class JobRepositoryImpl : JobRepository {
 
     private var db: FirebaseFirestore = Firebase.firestore
-    private var auth: FirebaseAuth = Firebase.auth
 
-    override suspend fun createJob(userId: String, job: CreateJobDTO) {
-        val jobMap = hashMapOf(
-            "active" to true,
-            "deleted" to false,
-            "description" to job.description,
-            "employer" to job.employer,
-            "locationInfo" to job.locationInfo,
-            "location" to job.location,
-            "position" to job.position,
-            "season" to job.season,
-            "startDate" to job.startDate,
-            "endDate" to job.endDate
+    override suspend fun createJob(jobCreateModel: JobCreateModel) {
+
+        val employerRef = db.collection("employers").document(jobCreateModel.employerId)
+
+        val job = Job(
+            active = true,
+            deleted = false,
+            description = jobCreateModel.description,
+            employer = employerRef,
+            locationInfo = jobCreateModel.locationInfo,
+            location = GeoPoint(jobCreateModel.locationLatitude, jobCreateModel.locationLongitude),
+            position = jobCreateModel.position,
+            season = jobCreateModel.season.toLong(),
+            startDate = DateUtils.localDateToTimestamp(jobCreateModel.startDate),
+            endDate = DateUtils.localDateToTimestamp(jobCreateModel.endDate)
         )
 
         try {
-            db.collection("users").document(userId).collection("jobs").add(jobMap).await()
+            db.collection("users").document(jobCreateModel.userId).collection("jobs").add(job)
+                .await()
         } catch (e: Exception) {
             Log.e("Firestore", "Failed to add job", e)
         }
     }
 
-    override suspend fun getJobs(userId: String): List<Job> {
-        val jobsRes = db.collection("users").document(userId).collection("jobs").get().await()
+    override suspend fun getJobs(userId: String): List<JobGetModel> {
+        val jobsRes = db.collection("users").document(userId).collection("jobs")
+            .whereEqualTo("deleted", false).get().await()
         return jobsRes.documents.mapNotNull {
-            Job(
-                id = it.id,
-                active = it.getBoolean("active") ?: true,
-                deleted = it.getBoolean("deleted") ?: false,
-                description = it.getString("description") ?: "",
-                employer = it.getDocumentReference("employer")!!,
-                locationInfo = it.getString("locationInfo") ?: "",
-                location = it.getGeoPoint("location") ?: GeoPoint(0.0, 0.0),
-                position = it.getString("position") ?: "",
-                season = it.getDocumentReference("season")!!,
-                startDate = it.getTimestamp("startDate") ?: Timestamp.now(),
-                endDate = it.getTimestamp("endDate") ?: Timestamp.now()
-            )
+            mapDocumentSnapshotToJobGetModel(it)
         }
     }
 
@@ -96,37 +105,58 @@ class JobRepositoryImpl : JobRepository {
             .update("deleted", true).await()
     }
 
-    override suspend fun getJob(jobId: String): Job {
-        val job =
-            db.collection("users").document(auth.uid!!).collection("jobs").document(jobId).get()
+    override suspend fun getJob(userId: String, jobId: String): JobGetModel? {
+        val jobRes =
+            db.collection("users").document(userId).collection("jobs").document(jobId).get()
                 .await()
-
-        return Job(
-            id = job.id,
-            active = job.getBoolean("active") ?: true,
-            deleted = job.getBoolean("deleted") ?: false,
-            description = job.getString("description") ?: "",
-            employer = job.getDocumentReference("employer")!!,
-            locationInfo = job.getString("locationInfo") ?: "",
-            location = job.getGeoPoint("location") ?: GeoPoint(0.0, 0.0),
-            position = job.getString("position") ?: "",
-            season = job.getDocumentReference("seasonId")!!,
-            startDate = job.getTimestamp("startDate") ?: Timestamp.now(),
-            endDate = job.getTimestamp("endDate") ?: Timestamp.now()
-        )
+        return mapDocumentSnapshotToJobGetModel(jobRes);
     }
 
-    override suspend fun updateJob(userId: String, jobId: String, job: JobUpdateModel) {
+    private suspend fun mapDocumentSnapshotToJobGetModel(jobSnapshot: DocumentSnapshot): JobGetModel? {
+        return try {
+            val job = jobSnapshot.toObject<Job>()
+
+            val employerRes = jobSnapshot.getDocumentReference("employer")?.get()?.await()
+            val employer = employerRes?.toObject<Employer>()
+
+            if (job == null || employer == null) return null
+
+            JobGetModel(
+                id = jobSnapshot.id,
+                description = job.description,
+                employer = EmployerGetModel(
+                    id = employerRes.id,
+                    name = employer.name
+                ),
+                locationInfo = job.locationInfo,
+                locationLatitude = job.location.latitude,
+                locationLongitude = job.location.longitude,
+                position = job.position,
+                season = job.season,
+                startDate = DateUtils.timestampToLocalDate(job.startDate),
+                endDate = DateUtils.timestampToLocalDate(job.endDate)
+            )
+        } catch (e: Exception) {
+            e.message?.let { Log.e("Exc", it) }
+            null
+        }
+
+    }
+
+    override suspend fun updateJob(jobId: String, job: JobUpdateModel) {
+
+        val employerRef = db.collection("employers").document(job.employerId)
+
         val jobMap = hashMapOf(
             "description" to job.description,
-            "employer" to job.employer,
+            "employer" to employerRef,
             "locationInfo" to job.locationInfo,
             "location" to job.location,
             "position" to job.position,
-            "startDate" to job.startDate,
-            "endDate" to job.endDate
+            "startDate" to DateUtils.localDateToTimestamp(job.startDate),
+            "endDate" to DateUtils.localDateToTimestamp(job.endDate)
         )
-        db.collection("users").document(userId).collection("jobs").document(jobId)
+        db.collection("users").document(job.userId).collection("jobs").document(jobId)
             .update(jobMap).await()
     }
 }

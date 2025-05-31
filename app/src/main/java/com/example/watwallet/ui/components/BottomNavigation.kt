@@ -13,7 +13,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.example.watwallet.core.navigation.mainNavigationItems
+import com.example.watwallet.core.navigation.navigationBarItems
 
 @Composable
 fun BottomNavigation(navController: NavController) {
@@ -21,7 +21,7 @@ fun BottomNavigation(navController: NavController) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
 
-        mainNavigationItems.forEach { screen ->
+        navigationBarItems.forEach { screen ->
             NavigationBarItem(
                 colors = NavigationBarItemDefaults.colors(
                     indicatorColor = Color.Transparent,
