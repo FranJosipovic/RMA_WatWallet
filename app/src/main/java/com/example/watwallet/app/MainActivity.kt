@@ -29,7 +29,7 @@ private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
 fun sendTransactionNotification(context: Context, message: String) {
     val notificationId = 1
     val builder = NotificationCompat.Builder(context, "transactions_channel")
-        .setSmallIcon(R.drawable.baseline_circle_notifications_24) // Replace with your icon
+        .setSmallIcon(R.drawable.baseline_circle_notifications_24)
         .setContentTitle("Transaction Added")
         .setContentText(message)
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -40,13 +40,6 @@ fun sendTransactionNotification(context: Context, message: String) {
                 Manifest.permission.POST_NOTIFICATIONS
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
             return
         }
         notify(notificationId, builder.build())
@@ -65,7 +58,8 @@ class MainActivity : ComponentActivity() {
                 description = "Used for transaction notifications"
             }
 
-            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manager =
+                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             manager.createNotificationChannel(channel)
         }
     }
@@ -77,11 +71,7 @@ class MainActivity : ComponentActivity() {
         requestPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestPermission()
         ) { isGranted: Boolean ->
-            if (isGranted) {
-                // Permission granted
-            } else {
-                // Permission denied
-            }
+            {}
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -99,9 +89,9 @@ class MainActivity : ComponentActivity() {
 
         lifecycleScope.launch {
 
-            val startingRoute = if(authRepository.isAuthenticated()){
+            val startingRoute = if (authRepository.isAuthenticated()) {
                 NavigationItem.Main.route
-            }else{
+            } else {
                 NavigationItem.Auth.route
             }
 

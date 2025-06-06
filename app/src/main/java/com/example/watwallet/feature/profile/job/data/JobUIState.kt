@@ -13,5 +13,12 @@ data class JobUIState(
     val startDate: LocalDate = DateUtils.currentDate,
     val endDate: LocalDate = DateUtils.currentDate,
     val employer: EmployerGetModel? = null,
-    val loading: Boolean = false
+    val loading: Boolean = false,
+)
+
+data class JobFormErrorState(
+    val positionError: String? = null,
+    val locationInfoError: String? = null,
+    val descriptionError: String? = null,
+    val employerError: String? = null
 )

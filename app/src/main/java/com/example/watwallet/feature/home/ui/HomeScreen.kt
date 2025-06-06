@@ -73,6 +73,9 @@ fun HomeScreen(navController: NavController) {
     val finding by homeViewModel.finding.collectAsState()
     val editing by homeViewModel.finding.collectAsState()
 
+    val incomeEditErrorState by homeViewModel.incomeEditErrorState.collectAsState()
+    val expenseEditErrorState by homeViewModel.expenseEditErrorState.collectAsState()
+
     val selectedExpense by homeViewModel.selectedExpense.collectAsState()
     val selectedIncome by homeViewModel.selectedIncome.collectAsState()
 
@@ -107,6 +110,7 @@ fun HomeScreen(navController: NavController) {
             onCancel = {
                 homeViewModel.onEditExpenseEvent(EditExpenseFormEvent.OnCancel)
             },
+            editExpenseErrorState = expenseEditErrorState,
             onSaveChanges = {
                 homeViewModel.onEditExpenseEvent(
                     EditExpenseFormEvent.OnSubmit(onSuccess = {
@@ -162,6 +166,7 @@ fun HomeScreen(navController: NavController) {
                     )
                 )
             },
+            editIncomeErrorState = incomeEditErrorState,
             onSaveChanges = {
                 homeViewModel.onEditIncomeEvent(EditIncomeFormEvent.OnSubmit(onSuccess = {
                     homeViewModel.unselectIncome()

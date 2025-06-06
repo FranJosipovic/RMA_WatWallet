@@ -46,7 +46,7 @@ fun AddTransactionScreen(startTabContent:Int = 0, snackbarHostState: SnackbarHos
                 snackbarHostState = snackbarHostState,
                 addTransactionViewModel = addTransactionViewModel,
                 onIncomeAdded = {
-                    sendTransactionNotification(context,"Expense Added Successfully")
+                    sendTransactionNotification(context,"Income Added Successfully")
                 },
                 onAddJob = onAddJob
             )

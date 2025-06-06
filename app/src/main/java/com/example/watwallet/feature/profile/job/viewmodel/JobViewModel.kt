@@ -14,6 +14,9 @@ import com.example.watwallet.data.repository.JobRepository
 import com.example.watwallet.data.repository.JobUpdateModel
 import com.example.watwallet.data.repository.User
 import com.example.watwallet.data.repository.UserRepository
+import com.example.watwallet.feature.addtransaction.viewmodel.ValidationResult
+import com.example.watwallet.feature.home.viewmodel.CommonFormValidator
+import com.example.watwallet.feature.profile.job.data.JobFormErrorState
 import com.example.watwallet.feature.profile.job.data.JobUIState
 import com.example.watwallet.utils.DateUtils
 import com.google.firebase.firestore.GeoPoint
@@ -32,16 +35,40 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
+class JobFormValidator : CommonFormValidator() {
+    fun validateIsEmpty(value: String?): ValidationResult {
+        return super.validate(value)
+    }
+
+    fun validateIsNull(value: Any?): ValidationResult {
+        return if (value == null) {
+            ValidationResult(
+                isSuccess = false,
+                message = "Field Cannot Be Empty"
+            )
+        } else {
+            ValidationResult(
+                isSuccess = true,
+                message = null
+            )
+        }
+    }
+}
+
 @OptIn(FlowPreview::class)
 class JobViewModel(
     private val jobRepository: JobRepository,
     private val employerRepository: EmployerRepository,
     private val userRepository: UserRepository,
-    private val geocoder: Geocoder
+    private val geocoder: Geocoder,
+    private val jobFormValidator: JobFormValidator = JobFormValidator()
 ) : ViewModel() {
 
     private val _jobForm = MutableStateFlow(JobUIState())
     val jobForm: StateFlow<JobUIState> = _jobForm.asStateFlow()
+
+    private val _jobFormErrorState = MutableStateFlow(JobFormErrorState())
+    val jobFormErrorState: StateFlow<JobFormErrorState> = _jobFormErrorState.asStateFlow()
 
     private val _employerSearchField = MutableStateFlow<String>("")
     val employerSearchField: StateFlow<String> = _employerSearchField.asStateFlow()
@@ -60,6 +87,9 @@ class JobViewModel(
 
     fun onJobDescriptionChange(value: String) {
         _jobForm.update { it.copy(description = value) }
+        if(jobFormValidator.validate(_jobForm.value.description).isSuccess && _jobFormErrorState.value.descriptionError != null){
+            _jobFormErrorState.update { it.copy(descriptionError = null) }
+        }
     }
 
     fun onSelectStartDate(milliseconds: Long) {
@@ -131,6 +161,9 @@ class JobViewModel(
 
     fun selectEmployer(employer: EmployerGetModel) {
         _jobForm.update { it.copy(employer = employer) }
+        if(jobFormValidator.validateIsNull(_jobForm.value.employer).isSuccess && _jobFormErrorState.value.employerError != null){
+            _jobFormErrorState.update { it.copy(employerError = null) }
+        }
     }
 
     fun unselectEmployer() {
@@ -147,6 +180,9 @@ class JobViewModel(
 
     fun onJobPositionUpdate(value: String) {
         _jobForm.update { it.copy(position = value) }
+        if(jobFormValidator.validate(_jobForm.value.position).isSuccess && _jobFormErrorState.value.positionError != null){
+            _jobFormErrorState.update { it.copy(positionError = null) }
+        }
     }
 
     fun onLocationSearchChange(value: String) {
@@ -155,6 +191,9 @@ class JobViewModel(
 
     fun onLocationSelect(value: Address) {
         _jobForm.update { it.copy(location = value) }
+        if(jobFormValidator.validateIsNull(_jobForm.value.location).isSuccess && _jobFormErrorState.value.locationInfoError != null){
+            _jobFormErrorState.update { it.copy(locationInfoError = null) }
+        }
     }
 
     fun getJobInfo(jobId: String, onLoad: (LocalDate, LocalDate) -> Unit) {
@@ -185,6 +224,31 @@ class JobViewModel(
 
     fun onAddJob(onSuccess: () -> Unit) {
         viewModelScope.launch {
+
+            var isError = false
+
+            if (!jobFormValidator.validate(_jobForm.value.description).isSuccess) {
+                _jobFormErrorState.update { it.copy(descriptionError = "Description Cannot be empty") }
+                isError = true
+            }
+
+            if (!jobFormValidator.validateIsNull(_jobForm.value.location).isSuccess) {
+                _jobFormErrorState.update { it.copy(locationInfoError = "Location Cannot be empty") }
+                isError = true
+            }
+
+            if (!jobFormValidator.validate(_jobForm.value.position).isSuccess) {
+                _jobFormErrorState.update { it.copy(positionError = "Position Cannot be empty") }
+                isError = true
+            }
+
+            if (!jobFormValidator.validateIsNull(_jobForm.value.employer).isSuccess) {
+                _jobFormErrorState.update { it.copy(employerError = "Employer needs to be selected") }
+                isError = true
+            }
+
+            if (isError) return@launch
+
             jobRepository.createJob(
                 jobCreateModel = JobCreateModel(
                     description = _jobForm.value.description,
@@ -205,6 +269,30 @@ class JobViewModel(
 
     fun onUpdateJob(jobId: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
+            var isError = false
+
+            if (!jobFormValidator.validate(_jobForm.value.description).isSuccess) {
+                _jobFormErrorState.update { it.copy(descriptionError = "Description Cannot be empty") }
+                isError = true
+            }
+
+            if (!jobFormValidator.validateIsNull(_jobForm.value.location).isSuccess) {
+                _jobFormErrorState.update { it.copy(locationInfoError = "Location Cannot be empty") }
+                isError = true
+            }
+
+            if (!jobFormValidator.validate(_jobForm.value.position).isSuccess) {
+                _jobFormErrorState.update { it.copy(positionError = "Position Cannot be empty") }
+                isError = true
+            }
+
+            if (!jobFormValidator.validateIsNull(_jobForm.value.employer).isSuccess) {
+                _jobFormErrorState.update { it.copy(employerError = "Employer needs to be selected") }
+                isError = true
+            }
+
+            if (isError) return@launch
+
             jobRepository.updateJob(
                 jobId = jobId,
                 JobUpdateModel(

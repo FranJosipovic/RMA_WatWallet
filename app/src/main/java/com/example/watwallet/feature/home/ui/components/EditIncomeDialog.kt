@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.watwallet.data.repository.JobGetModel
+import com.example.watwallet.feature.home.viewmodel.IncomeEditErrorState
 import com.example.watwallet.ui.components.CustomDatePickerDialog
 import com.example.watwallet.ui.components.MoneyInputField
 import kotlinx.datetime.LocalDate
@@ -59,6 +60,7 @@ fun EditIncomeDialog(
     onTipsEarnedChange: (String) -> Unit,
     totalHoursWorked: String,
     onTotalHoursWorkedChange: (String) -> Unit,
+    editIncomeErrorState: IncomeEditErrorState,
     onSaveChanges: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
@@ -135,7 +137,7 @@ fun EditIncomeDialog(
                     label = "Base Earned",
                     modifier = Modifier.weight(2f),
                     value = baseEarned,
-                    isError = false,
+                    isError = editIncomeErrorState.baseEarnedError != null,
                     onValueChange = {
                         onBaseEarnedChange(it)
                     }
@@ -144,7 +146,7 @@ fun EditIncomeDialog(
                     label = "Tips",
                     modifier = Modifier.weight(1f),
                     value = tipsEarned,
-                    isError = false,
+                    isError = editIncomeErrorState.tipsEarnedError != null,
                     onValueChange = {
                         onTipsEarnedChange(it)
                     }
@@ -213,7 +215,7 @@ fun EditIncomeDialog(
                         .height(56.dp),
                     shape = RoundedCornerShape(8.dp),
                     singleLine = true,
-                    isError = false
+                    isError = editIncomeErrorState.totalHoursWorkedError != null
                 )
             }
 

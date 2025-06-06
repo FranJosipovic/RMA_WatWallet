@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.watwallet.feature.addtransaction.viewmodel.tags
+import com.example.watwallet.feature.home.viewmodel.ExpenseEditErrorState
 import com.example.watwallet.ui.components.CustomDatePickerDialog
 import com.example.watwallet.ui.components.MoneyInputField
 import kotlinx.datetime.LocalDate
@@ -62,6 +63,7 @@ fun EditExpenseDialog(
     onAmountChange: (String) -> Unit,
     description: String,
     onDescriptionChange: (String) -> Unit,
+    editExpenseErrorState: ExpenseEditErrorState,
     onCancel: () -> Unit,
     onSaveChanges: () -> Unit
 ) {
@@ -101,7 +103,7 @@ fun EditExpenseDialog(
                     label = "Amount",
                     modifier = Modifier.weight(1f),
                     value = amount,
-                    isError = false,
+                    isError = editExpenseErrorState.amountError != null,
                     onValueChange = {
                         onAmountChange(it)
                     }
@@ -184,7 +186,7 @@ fun EditExpenseDialog(
                         focusManager.clearFocus()
                     }
                 ),
-                isError = false
+                isError = editExpenseErrorState.descriptionError != null,
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {

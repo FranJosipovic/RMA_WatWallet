@@ -60,6 +60,8 @@ fun JobForm(
     val startDatePickerState = rememberDatePickerState()
     val endDatePickerState = rememberDatePickerState()
 
+    val jobFormErrorState by jobViewModel.jobFormErrorState.collectAsState()
+
     LaunchedEffect(jobId) {
         if (!jobId.isNullOrEmpty()) {
             jobViewModel.getJobInfo(jobId = jobId) { startDate, endDate ->
@@ -134,8 +136,12 @@ fun JobForm(
                                 jobViewModel.onEmployerFieldChange("")
                                 jobViewModel.unselectEmployer()
                             },
-                            employersSearch = employersSearch
+                            employersSearch = employersSearch,
+                            isError = jobFormErrorState.employerError != null
                         )
+                        if (jobFormErrorState.employerError != null) {
+                            Text(jobFormErrorState.employerError ?: "", color = Color.Red)
+                        }
 
                         Spacer(Modifier.height(20.dp))
 
@@ -143,7 +149,8 @@ fun JobForm(
                             label = "Job Position",
                             placeholder = "e.g. Food Runner",
                             value = jobForm.position,
-                            onValueChange = { jobViewModel.onJobPositionUpdate(it) }
+                            onValueChange = { jobViewModel.onJobPositionUpdate(it) },
+                            isError = jobFormErrorState.positionError != null
                         )
 
                         Spacer(Modifier.height(20.dp))
@@ -159,6 +166,9 @@ fun JobForm(
                                 jobViewModel.onLocationSelect(it)
                             }
                         )
+                        if (jobFormErrorState.locationInfoError != null) {
+                            Text(jobFormErrorState.locationInfoError ?: "", color = Color.Red)
+                        }
 
                         Spacer(Modifier.height(20.dp))
 
@@ -177,7 +187,8 @@ fun JobForm(
                                     focusManager.clearFocus()
                                 }
                             ),
-                            placeholder = { Text("e.g. Delivering food to guests tables...") }
+                            placeholder = { Text("e.g. Delivering food to guests tables...") },
+                            isError = jobFormErrorState.descriptionError != null
                         )
 
                         Spacer(Modifier.height(20.dp))

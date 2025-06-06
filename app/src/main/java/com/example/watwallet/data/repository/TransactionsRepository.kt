@@ -36,7 +36,8 @@ data class IncomeUpdateModel(
     val baseEarned: Number,
     val tipsEarned: Number,
     val hoursWorked: Number,
-    val date: LocalDate
+    val date: LocalDate,
+    val userId: String
 )
 
 enum class TransactionType {

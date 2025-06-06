@@ -31,8 +31,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.watwallet.data.repository.Employer
 import com.example.watwallet.data.repository.EmployerGetModel
 
 @ExperimentalMaterial3Api
@@ -41,17 +41,24 @@ fun EmployerHandle(
     selectedEmployer: EmployerGetModel?,
     employerSearchField: String,
     employersSearch: List<EmployerGetModel>,
+    isError: Boolean,
     onQueryChange: (String) -> Unit,
     onSelectEmployer: (employer: EmployerGetModel) -> Unit,
     onCreateEmployer: (name: String) -> Unit,
-    onClearSearchBar: () -> Unit
+    onClearSearchBar: () -> Unit,
 ) {
 
     val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
 
     if (selectedEmployer != null) {
-        Text("Employer")
+        Text(
+            text = "Employer", color = if (isError) {
+                Color.Red
+            } else {
+                Color.Unspecified
+            }
+        )
         Spacer(Modifier.height(10.dp))
     }
 
@@ -61,7 +68,7 @@ fun EmployerHandle(
                 modifier = Modifier
                     .weight(5f)
                     .height(55.dp),
-                shape = RoundedCornerShape(4.dp)
+                shape = RoundedCornerShape(4.dp),
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),

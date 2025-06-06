@@ -27,6 +27,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.watwallet.R
+import java.lang.Error
 
 @Composable
 fun LabeledInputField(
@@ -35,6 +36,7 @@ fun LabeledInputField(
     value: String,
     keyboardType: KeyboardType = KeyboardType.Text,
     isPassword: Boolean = false,
+    isError: Boolean = false,
     onValueChange:(value:String)->Unit,
 ) {
     val focusManager = LocalFocusManager.current
@@ -84,7 +86,8 @@ fun LabeledInputField(
                 disabledTextColor = Color.Gray,
                 focusedPlaceholderColor = Color.Gray,
                 unfocusedPlaceholderColor = Color.Gray
-            )
+            ),
+            isError = isError
         )
     }
 }

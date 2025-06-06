@@ -109,7 +109,7 @@ class TransactionRepositoryImpl(
     }
 
     override suspend fun updateIncome(incomeId: String, income: IncomeUpdateModel) {
-        val job = db.collection("jobs").document(income.jobId)
+        val job = db.collection("users").document(income.userId).collection("jobs").document(income.jobId)
 
         db.collection("incomes").document(incomeId).update(
             hashMapOf(
